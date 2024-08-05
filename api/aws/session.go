@@ -2,8 +2,7 @@ package aws
 
 import (
 	"Codex-Backend/api/utils"
-	"errors"
-	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -11,25 +10,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-func CreateSession() (*dynamodb.DynamoDB, error) {
+var Svc *dynamodb.DynamoDB
+
+func init() {
 
 	APIKeys := utils.GetAPIKeys()
 
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(APIKeys.Region),
-		Credentials: credentials.NewStaticCredentials(
-			APIKeys.AccessKey,
-			APIKeys.SecretAccessKey,
-			"",
-		),
-		Endpoint: aws.String("http://localhost:"),
+		Region:      aws.String(APIKeys.Region),
+		Credentials: credentials.NewStaticCredentials(APIKeys.AccessKey, APIKeys.SecretAccessKey, ""),
 	})
 
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error creating session: %v", err))
+		log.Fatalf("Error creating session: %v", err)
 	}
 
-	svc := dynamodb.New(sess)
-
-	return svc, nil
+	Svc = dynamodb.New(sess)
 }

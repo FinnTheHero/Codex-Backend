@@ -1,41 +1,33 @@
 package server
 
 import (
-	aws_methods "Codex-Backend/api/aws/methods"
+	admin_handler "Codex-Backend/api/server/handlers/admin"
+	client_handler "Codex-Backend/api/server/handlers/client"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
-func Server(svc *dynamodb.DynamoDB) {
+func Server() {
 	gin.SetMode(gin.DebugMode)
 
 	r := gin.Default()
 
-	r.Use(cors.Default())
+	client := r.Group("/novels")
+	{
+		client.GET("/all", client_handler.FindAllNovels)
+		client.GET("/:novel", client_handler.FindNovel)
+		client.GET("/:novel/all", client_handler.FindAllChapters)
+		client.GET("/:novel/:chapter", client_handler.FindChapter)
+	}
 
-	// Find All Novels
-	r.GET("/novels", func(c *gin.Context) {
-		// TODO
-	})
+	client.Use(cors.Default())
 
-	// Find Novel
-	r.GET("/:novel", func(c *gin.Context) {
-		title := c.Param("novel")
-
-		NovelSchema, err := aws_methods.GetNovel(svc, title)
-		if err != nil {
-			c.JSON(404, gin.H{
-				"error": err.Error(),
-			})
-			return
-		}
-
-		c.JSON(200, gin.H{
-			"novel": NovelSchema.Novel,
-		})
-	})
+	admin := r.Group("/admin")
+	{
+		admin.POST("/novel", admin_handler.CreateNovel)
+		admin.POST("/chapter", admin_handler.CreateChapter)
+	}
 
 	r.Run()
 }

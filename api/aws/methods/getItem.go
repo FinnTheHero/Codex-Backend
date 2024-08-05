@@ -1,6 +1,7 @@
 package aws_methods
 
 import (
+	a "Codex-Backend/api/aws"
 	"Codex-Backend/api/types"
 	"errors"
 	"fmt"
@@ -10,7 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
-func GetNovel(svc *dynamodb.DynamoDB, title string) (types.NovelSchema, error) {
+func GetNovel(title string) (types.NovelSchema, error) {
+	svc := a.Svc
+
 	var res types.NovelSchema
 
 	result, err := svc.GetItem(&dynamodb.GetItemInput{
@@ -36,6 +39,27 @@ func GetNovel(svc *dynamodb.DynamoDB, title string) (types.NovelSchema, error) {
 	}
 
 	return res, nil
+}
+
+func GetAllNovels() ([]types.NovelSchema, error) {
+	svc := a.Svc
+
+	result, err := svc.Scan(&dynamodb.ScanInput{
+		TableName: aws.String("Novels"),
+	})
+
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Got error calling Scan: %s", err))
+	}
+
+	novels := []types.NovelSchema{}
+
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &novels)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Got error unmarshalling: %s", err))
+	}
+
+	return novels, nil
 }
 
 func GetChapter(svc *dynamodb.DynamoDB, title string) (types.Chapter, error) {
