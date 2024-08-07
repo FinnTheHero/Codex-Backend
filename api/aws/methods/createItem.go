@@ -1,20 +1,17 @@
 package aws_methods
 
 import (
+	a "Codex-Backend/api/aws"
 	"Codex-Backend/api/types"
-	"errors"
-	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
-func CreateTable(svc *dynamodb.DynamoDB) {
-	tableName := "Movies"
+func CreateTable(title string) error {
+	svc := a.Svc
+	tableName := title
 
 	input := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
@@ -38,87 +35,19 @@ func CreateTable(svc *dynamodb.DynamoDB) {
 
 	_, err := svc.CreateTable(input)
 	if err != nil {
-		log.Fatalf("Got error calling CreateTable: %s", err)
+		return err
 	}
 
-	fmt.Println("Created the table", tableName)
-
-	// TODO: Update this to session.NewSession()
-	svc_a := applicationautoscaling.New(session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	})))
-
-	// Auto-scaling - ReadCapacityUnits
-	_, err = svc_a.RegisterScalableTarget(&applicationautoscaling.RegisterScalableTargetInput{
-		ServiceNamespace:  aws.String("dynamodb"),
-		ResourceId:        aws.String(fmt.Sprintf("table/%s", tableName)),
-		ScalableDimension: aws.String("dynamodb:table:ReadCapacityUnits"),
-		MinCapacity:       aws.Int64(1),
-		MaxCapacity:       aws.Int64(10),
-	})
-
-	if err != nil {
-		log.Fatalf("Got error registering scalable target for read capacity: %s", err)
-	}
-	_, err = svc_a.PutScalingPolicy(&applicationautoscaling.PutScalingPolicyInput{
-		PolicyName:        aws.String("ReadAutoScalingPolicy"),
-		ServiceNamespace:  aws.String("dynamodb"),
-		ResourceId:        aws.String(fmt.Sprintf("table/%s", tableName)),
-		ScalableDimension: aws.String("dynamodb:table:ReadCapacityUnits"),
-		PolicyType:        aws.String("TargetTrackingScaling"),
-		TargetTrackingScalingPolicyConfiguration: &applicationautoscaling.TargetTrackingScalingPolicyConfiguration{
-			TargetValue:      aws.Float64(70.0), // Target 70% utilization
-			ScaleInCooldown:  aws.Int64(60),
-			ScaleOutCooldown: aws.Int64(60),
-			PredefinedMetricSpecification: &applicationautoscaling.PredefinedMetricSpecification{
-				PredefinedMetricType: aws.String("DynamoDBReadCapacityUtilization"),
-			},
-		},
-	})
-	if err != nil {
-		log.Fatalf("Got error putting scaling policy for read capacity: %s", err)
-	}
-
-	// Auto-scaling - WriteCapacityUnits
-	_, err = svc_a.RegisterScalableTarget(&applicationautoscaling.RegisterScalableTargetInput{
-		ServiceNamespace:  aws.String("dynamodb"),
-		ResourceId:        aws.String(fmt.Sprintf("table/%s", tableName)),
-		ScalableDimension: aws.String("dynamodb:table:WriteCapacityUnits"),
-		MinCapacity:       aws.Int64(1),
-		MaxCapacity:       aws.Int64(10),
-	})
-	if err != nil {
-		log.Fatalf("Got error registering scalable target for write capacity: %s", err)
-	}
-
-	_, err = svc_a.PutScalingPolicy(&applicationautoscaling.PutScalingPolicyInput{
-		PolicyName:        aws.String("WriteAutoScalingPolicy"),
-		ServiceNamespace:  aws.String("dynamodb"),
-		ResourceId:        aws.String(fmt.Sprintf("table/%s", tableName)),
-		ScalableDimension: aws.String("dynamodb:table:WriteCapacityUnits"),
-		PolicyType:        aws.String("TargetTrackingScaling"),
-		TargetTrackingScalingPolicyConfiguration: &applicationautoscaling.TargetTrackingScalingPolicyConfiguration{
-			TargetValue:      aws.Float64(70.0), // Target 70% utilization
-			ScaleInCooldown:  aws.Int64(60),
-			ScaleOutCooldown: aws.Int64(60),
-			PredefinedMetricSpecification: &applicationautoscaling.PredefinedMetricSpecification{
-				PredefinedMetricType: aws.String("DynamoDBWriteCapacityUtilization"),
-			},
-		},
-	})
-	if err != nil {
-		log.Fatalf("Got error putting scaling policy for write capacity: %s", err)
-	}
-
-	fmt.Println("Configured autoscaling for the table", tableName)
+	return nil
 }
 
-func CreateNovel(svc *dynamodb.DynamoDB, novel types.Novel) error {
+func CreateNovel(novel types.Novel) error {
+	svc := a.Svc
 	tableName := "Novels"
 
 	av, err := dynamodbattribute.MarshalMap(novel)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Got error marshalling new movie item: %v", err))
+		return err
 	}
 
 	input := &dynamodb.PutItemInput{
@@ -138,12 +67,37 @@ func CreateNovel(svc *dynamodb.DynamoDB, novel types.Novel) error {
 
 	_, err = svc.PutItem(input)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Got error calling PutItem: %v", err))
+		return err
 	}
 
-	return errors.New(fmt.Sprintf("Successfully added '%s' to table '%s'", novel.Title, tableName))
+	return nil
 }
 
-func CreateChapter() {
-	// TODO
+func CreateChapter(novelTitle string, chapter types.Chapter) error {
+	svc := a.Svc
+	tableName := novelTitle
+
+	av, err := dynamodbattribute.MarshalMap(chapter)
+	if err != nil {
+		return err
+	}
+
+	input := &dynamodb.PutItemInput{
+		Item: map[string]*dynamodb.AttributeValue{
+			"Title": {
+				S: aws.String(chapter.Title),
+			},
+			"Chapter": {
+				M: av,
+			},
+		},
+		TableName: aws.String(tableName),
+	}
+
+	_, err = svc.PutItem(input)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

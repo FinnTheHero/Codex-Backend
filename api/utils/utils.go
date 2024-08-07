@@ -1,6 +1,7 @@
 package utils
 
 import (
+	aws_methods "Codex-Backend/api/aws/methods"
 	"Codex-Backend/api/types"
 	"log"
 	"os"
@@ -35,4 +36,19 @@ func GetAPIKeys() types.AWSAPIKeys {
 		Region:          region,
 		Output:          output,
 	}
+}
+
+func IsTableCreated(tableName string) (bool, error) {
+	tableNames, err := aws_methods.GetTables()
+	if err != nil {
+		return false, err
+	}
+
+	for _, name := range tableNames {
+		if name == tableName {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

@@ -26,8 +26,10 @@ func Server() {
 	admin := r.Group("/admin")
 	{
 		admin.POST("/novel", admin_handler.CreateNovel)
-		admin.POST("/chapter", admin_handler.CreateChapter)
+		admin.POST("/:novel/chapter", admin_handler.CreateChapter)
 	}
+
+	admin.Use(cors.Default())
 
 	r.Run()
 }
