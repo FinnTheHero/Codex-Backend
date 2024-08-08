@@ -13,7 +13,7 @@ func Server() {
 
 	r := gin.Default()
 
-	client := r.Group("/novels")
+	client := r.Group("/")
 	{
 		client.GET("/all", client_handler.FindAllNovels)
 		client.GET("/:novel", client_handler.FindNovel)

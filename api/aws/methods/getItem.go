@@ -69,14 +69,16 @@ func GetAllNovels() ([]types.NovelSchema, error) {
 	return novels, nil
 }
 
-func GetChapter(svc *dynamodb.DynamoDB, title string) (types.Chapter, error) {
+func GetChapter(novelTitle, chapterTitle string) (types.Chapter, error) {
+	svc := a.Svc
+
 	chapter := types.Chapter{}
 
 	result, err := svc.GetItem(&dynamodb.GetItemInput{
-		TableName: aws.String("Chapters"),
+		TableName: aws.String(novelTitle),
 		Key: map[string]*dynamodb.AttributeValue{
 			"Title": {
-				S: aws.String(title),
+				S: aws.String(chapterTitle),
 			},
 		},
 	})
@@ -86,16 +88,12 @@ func GetChapter(svc *dynamodb.DynamoDB, title string) (types.Chapter, error) {
 	}
 
 	if result.Item == nil {
-		return chapter, errors.New("Could not find '" + title + "'")
+		return chapter, errors.New("Could not find '" + chapterTitle + "'")
 	}
 
 	err = dynamodbattribute.UnmarshalMap(result.Item, &chapter)
 	if err != nil {
 		return chapter, err
-	}
-
-	if chapter.Title == "" {
-		return chapter, errors.New(title + " Not Found")
 	}
 
 	return chapter, nil
