@@ -37,5 +37,32 @@ func FindChapter(c *gin.Context) {
 }
 
 func FindAllChapters(c *gin.Context) {
-	// TODO
+	novel := c.Param("novel")
+
+	tables, err := aws_methods.GetTables()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, table := range tables {
+		if table == novel {
+			chapters, err := aws_methods.GetAllChapters(novel)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError,
+					gin.H{"error": err.Error()},
+				)
+				return
+			}
+
+			c.JSON(http.StatusFound,
+				gin.H{"chapters": chapters},
+			)
+			return
+		}
+	}
+
+	c.JSON(http.StatusNotFound,
+		gin.H{"error": "Novel not found"},
+	)
 }

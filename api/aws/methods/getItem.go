@@ -99,6 +99,30 @@ func GetChapter(novelTitle, chapterTitle string) (types.Chapter, error) {
 	return chapter, nil
 }
 
+func GetAllChapters(novelTitle string) ([]types.Chapter, error) {
+	svc := a.Svc
+
+	result, err := svc.Scan(&dynamodb.ScanInput{
+		TableName: aws.String(novelTitle),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	chapters := []types.Chapter{}
+
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &chapters)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(chapters) == 0 {
+		return nil, errors.New("No chapters found")
+	}
+
+	return chapters, nil
+}
+
 func GetTables() ([]string, error) {
 	svc := a.Svc
 
