@@ -24,6 +24,5 @@ It is deployed on `Heroku`.
     ```bash
     AWS_ACCESS_KEY_ID = "" # Add your keys here
     AWS_SECRET_ACCESS_KEY = "" # Add your keys here
-    AWS_REGION = "eu-central-1"
-    AWS_OUTPUT = "json"
+    AWS_REGION = "eu-central-1" # Change region if needed
     ```

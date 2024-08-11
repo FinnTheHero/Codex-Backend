@@ -33,7 +33,6 @@ func FindChapter(c *gin.Context) {
 			return
 		}
 	}
-
 }
 
 func FindAllChapters(c *gin.Context) {

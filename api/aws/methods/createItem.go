@@ -3,15 +3,21 @@ package aws_methods
 import (
 	a "Codex-Backend/api/aws"
 	"Codex-Backend/api/types"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
+// Creates a table with the title as the table name.
+//
+// `title` can only contain letters, numbers, underscores, dot and hyphens.
 func CreateTable(title string) error {
 	svc := a.Svc
 	tableName := title
+
+	finalTableName := strings.ReplaceAll(tableName, " ", "_")
 
 	input := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
@@ -30,7 +36,7 @@ func CreateTable(title string) error {
 			ReadCapacityUnits:  aws.Int64(1),
 			WriteCapacityUnits: aws.Int64(1),
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(finalTableName),
 	}
 
 	_, err := svc.CreateTable(input)
@@ -41,6 +47,7 @@ func CreateTable(title string) error {
 	return nil
 }
 
+// Adds `novel` to the 'Novels' table.
 func CreateNovel(novel types.Novel) error {
 	svc := a.Svc
 	tableName := "Novels"
@@ -73,6 +80,9 @@ func CreateNovel(novel types.Novel) error {
 	return nil
 }
 
+// Adds chapter to respective novel table.
+//
+// `novelTitle` is the title of the novel to which the `chapter` is to be added.
 func CreateChapter(novelTitle string, chapter types.Chapter) error {
 	svc := a.Svc
 	tableName := novelTitle
