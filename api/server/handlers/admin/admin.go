@@ -5,6 +5,7 @@ import (
 	"Codex-Backend/api/types"
 	"Codex-Backend/api/utils"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,6 +43,8 @@ func CreateNovel(c *gin.Context) {
 
 func CreateChapter(c *gin.Context) {
 	novelTitle := c.Param("novel")
+
+	novelTitle = strings.ReplaceAll(novelTitle, " ", "_")
 
 	var chapter types.Chapter
 

@@ -3,12 +3,15 @@ package client_handler
 import (
 	aws_methods "Codex-Backend/api/aws/methods"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func FindNovel(c *gin.Context) {
 	title := c.Param("novel")
+
+	title = strings.ReplaceAll(title, " ", "_")
 
 	NovelSchema, err := aws_methods.GetNovel(title)
 	if err != nil {

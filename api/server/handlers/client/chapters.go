@@ -3,6 +3,7 @@ package client_handler
 import (
 	aws_methods "Codex-Backend/api/aws/methods"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +11,8 @@ import (
 func FindChapter(c *gin.Context) {
 	novel := c.Param("novel")
 	chapter := c.Param("chapter")
+
+	novel = strings.ReplaceAll(novel, " ", "_")
 
 	tables, err := aws_methods.GetTables()
 	if err != nil {
@@ -37,6 +40,8 @@ func FindChapter(c *gin.Context) {
 
 func FindAllChapters(c *gin.Context) {
 	novel := c.Param("novel")
+
+	novel = strings.ReplaceAll(novel, " ", "_")
 
 	tables, err := aws_methods.GetTables()
 	if err != nil {

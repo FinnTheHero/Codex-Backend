@@ -8,6 +8,70 @@ Codex-Backend is built in `GoLang`, using `Gin` for server and `AWS-dynamoDB` fo
 
 It is deployed on `Heroku`.
 
+## Endpoints
+
+### Group: `client` - `/`
+
+- `GET` - `/all` - Get all novels
+- `GET` - `/:novel` - Get novel by name
+- `GET` - `/:novel/all` - Get all chapters in novel
+- `GET` - `/:novel/:chapter` - Get specific chapter in novel
+
+### Group: `admin` - `/admin`
+
+- `Get` - `/auth` - Get auth token
+    ```json
+    // TODO
+    ```
+
+- `POST` - `/novel` - Create novel
+    ```json
+    // Request body example
+    {
+        "title": "Novel",
+        "author": "Author",
+        "description": "Description",
+        "creation_date": "2024-08-03T15:35:24.621148124+04:00",
+        "upload_date": "2024-08-03T15:35:24.621148124+04:00",
+        "update_date": "2024-08-03T15:35:24.621148124+04:00"
+    }
+    ```
+
+- `POST` - `/:novel/chapter` - Create chapter to novel
+    ```json
+    // Request body example
+    {
+        "title": "Chapter",
+        "author": "Author",
+        "description": "Description",
+        "creation_date": "2024-08-03T15:35:24.621148124+04:00",
+        "upload_date": "2024-08-03T15:35:24.621148124+04:00",
+        "update_date": "2024-08-03T15:35:24.621148124+04:00",
+        "content": "Content"
+    }
+    ```
+
+- `PUT` - `/:novel` - Update novel
+    ```json
+    // TODO
+    ```
+
+- `PUT` - `/:novel/:chapter` - Update chapter
+    ```json
+    // TODO
+    ```
+
+- `DELETE` - `/:novel` - Delete novel
+    ```json
+    // TODO
+    ```
+
+- `DELETE` - `/:novel/:chapter` - Delete chapter
+    ```json
+    // TODO
+    ```
+
+
 ## Development
 
 ### Setup
