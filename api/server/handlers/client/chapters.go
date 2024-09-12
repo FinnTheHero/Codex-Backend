@@ -1,72 +1,62 @@
-package client_handler
+package handlers
 
 import (
-	aws_methods "Codex-Backend/api/aws/methods"
+	"Codex-Backend/api/models"
+	"Codex-Backend/api/server/services"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
+var chapterService = services.NewChapterService()
+
 func FindChapter(c *gin.Context) {
 	novel := c.Param("novel")
-	chapter := c.Param("chapter")
+	title := c.Param("chapter")
 
-	novel = strings.ReplaceAll(novel, " ", "_")
-
-	tables, err := aws_methods.GetTables()
+	result, err := chapterService.GetChapter(novel, title)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to get tables"})
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
 		return
 	}
 
-	for _, table := range tables {
-		if table == novel {
-			ch, err := aws_methods.GetChapter(novel, chapter)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError,
-					gin.H{"error": err.Error()},
-				)
-				return
-			}
-
-			c.JSON(http.StatusFound,
-				gin.H{"chapter": ch},
-			)
-			return
-		}
+	chapter, ok := result.(models.Chapter)
+	if !ok {
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"error": "Type assertion failed"},
+		)
+		return
 	}
+
+	c.JSON(http.StatusFound,
+		gin.H{"chapter": chapter},
+	)
+	return
 }
 
 func FindAllChapters(c *gin.Context) {
 	novel := c.Param("novel")
 
-	novel = strings.ReplaceAll(novel, " ", "_")
-
-	tables, err := aws_methods.GetTables()
+	result, err := chapterService.GetAllChapters(novel)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
 		return
 	}
 
-	for _, table := range tables {
-		if table == novel {
-			chapters, err := aws_methods.GetAllChapters(novel)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError,
-					gin.H{"error": err.Error()},
-				)
-				return
-			}
-
-			c.JSON(http.StatusFound,
-				gin.H{"chapters": chapters},
-			)
-			return
-		}
+	chapters, ok := result.([]models.Chapter)
+	if !ok {
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"error": "Type assertion failed"},
+		)
+		return
 	}
 
-	c.JSON(http.StatusNotFound,
-		gin.H{"error": "Novel not found"},
+	c.JSON(http.StatusFound,
+		gin.H{"chapters": chapters},
 	)
+	return
 }

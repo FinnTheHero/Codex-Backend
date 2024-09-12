@@ -1,19 +1,19 @@
-package client_handler
+package handlers
 
 import (
-	aws_methods "Codex-Backend/api/aws/methods"
+	"Codex-Backend/api/models"
+	"Codex-Backend/api/server/services"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
+var novelService = services.NewNovelService()
+
 func FindNovel(c *gin.Context) {
 	title := c.Param("novel")
 
-	title = strings.ReplaceAll(title, " ", "_")
-
-	NovelSchema, err := aws_methods.GetNovel(title)
+	result, err := novelService.GetNovel(title)
 	if err != nil {
 		errStatus := http.StatusInternalServerError
 
@@ -27,13 +27,22 @@ func FindNovel(c *gin.Context) {
 		return
 	}
 
+	novel, ok := result.(models.NovelDTO)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Type assertion failed",
+		})
+		return
+	}
+
 	c.JSON(http.StatusFound, gin.H{
-		"novel": NovelSchema.Novel,
+		"novel": novel.Novel,
 	})
+	return
 }
 
 func FindAllNovels(c *gin.Context) {
-	Novels, err := aws_methods.GetAllNovels()
+	result, err := novelService.GetAllNovels()
 	if err != nil {
 		errStatus := http.StatusInternalServerError
 
@@ -47,7 +56,16 @@ func FindAllNovels(c *gin.Context) {
 		return
 	}
 
+	novels, ok := result.([]models.NovelDTO)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Type assertion failed",
+		})
+		return
+	}
+
 	c.JSON(http.StatusFound, gin.H{
-		"novels": Novels,
+		"novels": novels,
 	})
+	return
 }

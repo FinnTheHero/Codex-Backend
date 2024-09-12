@@ -1,17 +1,17 @@
 package admin_handler
 
 import (
-	aws_methods "Codex-Backend/api/aws/methods"
-	"Codex-Backend/api/types"
-	"Codex-Backend/api/utils"
+	"Codex-Backend/api/models"
+	admin_services "Codex-Backend/api/server/services/admin"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
+var adminService = admin_services.NewAdminService()
+
 func CreateNovel(c *gin.Context) {
-	var novel types.Novel
+	var novel models.Novel
 
 	if err := c.ShouldBindJSON(&novel); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -20,20 +20,11 @@ func CreateNovel(c *gin.Context) {
 		return
 	}
 
-	err := aws_methods.CreateTable(novel.Title)
+	err := adminService.CreateNovel(novel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
-		return
-	}
-
-	err = aws_methods.CreateNovel(novel)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
@@ -42,11 +33,9 @@ func CreateNovel(c *gin.Context) {
 }
 
 func CreateChapter(c *gin.Context) {
-	novelTitle := c.Param("novel")
+	novel := c.Param("novel")
 
-	novelTitle = strings.ReplaceAll(novelTitle, " ", "_")
-
-	var chapter types.Chapter
+	var chapter models.Chapter
 
 	if err := c.ShouldBindJSON(&chapter); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -55,22 +44,7 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	tableExists, err := utils.IsTableCreated(novelTitle)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	if !tableExists {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Novel not found",
-		})
-		return
-	}
-
-	err = aws_methods.CreateChapter(novelTitle, chapter)
+	err := adminService.CreateChapter(novel, chapter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
