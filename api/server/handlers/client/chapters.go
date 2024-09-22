@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"Codex-Backend/api/models"
-	"Codex-Backend/api/server/services"
+	client_services "Codex-Backend/api/server/services/client"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-var chapterService = services.NewChapterService()
+var chapterService = client_services.NewChapterService()
 
 func FindChapter(c *gin.Context) {
 	novel := c.Param("novel")

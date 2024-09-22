@@ -1,4 +1,4 @@
-package services
+package client_services
 
 import (
 	aws_services "Codex-Backend/api/aws/services"

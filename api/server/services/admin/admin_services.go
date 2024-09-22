@@ -14,7 +14,16 @@ func NewAdminService() *AdminService {
 }
 
 func (s *AdminService) CreateNovel(novel models.Novel) error {
-	err := aws_services.CreateTable(novel.Title)
+	tableExists, err := aws_services.IsTableCreated(novel.Title)
+	if err != nil {
+		return err
+	}
+
+	if tableExists {
+		return errors.New("Novel already exists")
+	}
+
+	err = aws_services.CreateTable(novel.Title)
 	if err != nil {
 		return err
 	}
