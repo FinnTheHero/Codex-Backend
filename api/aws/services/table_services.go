@@ -96,3 +96,36 @@ func CreateTable(title string) error {
 
 	return nil
 }
+
+/* Create 'Users' table */
+func CreateUsersTable() error {
+
+	svc := GetAWSSession().Svc
+
+	input := &dynamodb.CreateTableInput{
+		AttributeDefinitions: []*dynamodb.AttributeDefinition{
+			{
+				AttributeName: aws.String("Email"),
+				AttributeType: aws.String("S"),
+			},
+		},
+		KeySchema: []*dynamodb.KeySchemaElement{
+			{
+				AttributeName: aws.String("Email"),
+				KeyType:       aws.String("HASH"),
+			},
+		},
+		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+			ReadCapacityUnits:  aws.Int64(1),
+			WriteCapacityUnits: aws.Int64(1),
+		},
+		TableName: aws.String("Users"),
+	}
+
+	_, err := svc.CreateTable(input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

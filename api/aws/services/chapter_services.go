@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
+/* Find and return chapter from novel */
 func GetChapter(novel, title string) (interface{}, error) {
 
 	svc := GetAWSSession().Svc
@@ -40,6 +41,7 @@ func GetChapter(novel, title string) (interface{}, error) {
 	return chapter, nil
 }
 
+/* Return every chapter from novel */
 func GetAllChapters(novel string) (interface{}, error) {
 
 	svc := GetAWSSession().Svc
@@ -65,7 +67,7 @@ func GetAllChapters(novel string) (interface{}, error) {
 	return chapters, nil
 }
 
-/* Adds chapter to respective novel table. */
+/* Add chapter to respective novel table. */
 func CreateChapter(novel string, chapter models.Chapter) error {
 
 	svc := GetAWSSession().Svc

@@ -2,7 +2,9 @@ package server
 
 import (
 	admin_handler "Codex-Backend/api/server/handlers/admin"
+	auth_handler "Codex-Backend/api/server/handlers/auth"
 	client_handler "Codex-Backend/api/server/handlers/client"
+	"Codex-Backend/api/server/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,6 +22,12 @@ func RegisteredRoutes(r *gin.Engine) {
 	{
 		admin.POST("/novel", admin_handler.CreateNovel)
 		admin.POST("/:novel/chapter", admin_handler.CreateChapter)
+	}
+
+	auth := r.Group("/auth")
+	{
+		auth.GET("/login", middleware.ValidateToken(), auth_handler.LoginUser)
+		auth.POST("/register", auth_handler.RegisterUser)
 	}
 
 	// Change this to a more specific CORS policy in production
