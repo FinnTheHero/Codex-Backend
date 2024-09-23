@@ -12,7 +12,7 @@ var authService = auth_services.NewAuthService()
 
 func RegisterUser(c *gin.Context) {
 
-	var user models.User
+	var user models.NewUser
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

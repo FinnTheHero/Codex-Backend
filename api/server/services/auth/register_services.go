@@ -7,10 +7,12 @@ import (
 	"time"
 )
 
-func (s *AuthService) RegisterUser(user models.User) error {
+func (s *AuthService) RegisterUser(credentials models.NewUser) error {
+
+	var user models.User
 
 	// Check if user already exists
-	result, err := aws_services.GetUser(user.Email)
+	result, err := aws_services.GetUser(credentials.Email)
 	if err != nil {
 		if err.Error() != "User not found" {
 			return err
@@ -19,12 +21,12 @@ func (s *AuthService) RegisterUser(user models.User) error {
 
 	userDTO, _ := result.(models.UserDTO)
 
-	if userDTO.Email == user.Email || userDTO.Email != "" {
+	if userDTO.Email == credentials.Email || userDTO.Email != "" {
 		return errors.New("Email already in use")
 	}
 
 	// Hash password
-	hashedPassword, err := HashPassword(user.Password)
+	hashedPassword, err := HashPassword(credentials.Password)
 	if err != nil {
 		return errors.New("Error hashing password: " + err.Error())
 	}
