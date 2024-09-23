@@ -25,3 +25,9 @@ type Claims struct {
 	Email string `json:"email"`
 	jwt.RegisteredClaims
 }
+
+type NewUser struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
