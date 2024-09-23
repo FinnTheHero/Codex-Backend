@@ -27,6 +27,13 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
+	if credentials.Email == "" || credentials.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Email and password are required",
+		})
+		return
+	}
+
 	token, err := authService.LoginUser(credentials)
 	if err != nil {
 		statusError := http.StatusInternalServerError

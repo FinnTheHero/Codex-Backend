@@ -4,6 +4,7 @@ import (
 	aws_services "Codex-Backend/api/aws/services"
 	"Codex-Backend/api/models"
 	"errors"
+	"time"
 )
 
 func (s *AuthService) RegisterUser(user models.User) error {
@@ -28,6 +29,11 @@ func (s *AuthService) RegisterUser(user models.User) error {
 		return errors.New("Error hashing password: " + err.Error())
 	}
 	user.Password = string(hashedPassword)
+
+	// Set user defaults
+	user.Type = "user"
+	user.Created_at = time.Now().Format("2006-01-02 15:04:05")
+	user.Updated_at = user.Created_at
 
 	// Create new user
 	err = aws_services.CreateUser(user)
