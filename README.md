@@ -10,6 +10,31 @@ It is deployed on `Heroku`.
 
 ## Endpoints
 
+### Group: `auth` - `/auth`
+
+- GET - `/login` - Login user
+
+    Middleware will check if user has a token, if its valid it will return user data.
+    Otherwise it will be redirected to login handler where provided credentials will be used to login.
+    Finally it will return token as a cookie.
+    ```json
+    // Request body example
+    {
+        "email": "email",
+        "password": "password"
+    }
+    ```
+
+- POST - `/register` - Register user
+    ```json
+    // Request body example
+    {
+        "username": "user",
+        "password": "password",
+        "email": "example@mail",
+    }
+    ```
+
 ### Group: `client` - `/`
 
 - `GET` - `/all` - Get all novels
@@ -18,11 +43,6 @@ It is deployed on `Heroku`.
 - `GET` - `/:novel/:chapter` - Get specific chapter in novel
 
 ### Group: `admin` - `/admin`
-
-- `Get` - `/auth` - Get auth token
-    ```json
-    // TODO
-    ```
 
 - `POST` - `/novel` - Create novel
     ```json
