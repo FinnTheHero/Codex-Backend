@@ -9,15 +9,6 @@ import (
 
 func LoginUser(c *gin.Context) {
 
-	user, exists := c.Get("user")
-	if exists {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "User already logged in",
-			"user":    user,
-		})
-		return
-	}
-
 	var credentials models.Credentials
 
 	if err := c.ShouldBindJSON(&credentials); err != nil {
