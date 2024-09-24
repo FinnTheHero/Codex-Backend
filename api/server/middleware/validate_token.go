@@ -43,6 +43,12 @@ func ValidateToken() gin.HandlerFunc {
 				return
 			}
 
+			if claims.Email == "" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+					"error": "Mail not found in token",
+				})
+			}
+
 			// Find user
 			result, err := aws_services.GetUser(claims.Email)
 			if err != nil {
@@ -61,7 +67,7 @@ func ValidateToken() gin.HandlerFunc {
 			}
 
 			// Check user email
-			if userDTO.Email != claims.Email {
+			if userDTO.Email == "" || userDTO.Email != claims.Email {
 				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 					"error": "User not found",
 				})
