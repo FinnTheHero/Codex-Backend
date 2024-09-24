@@ -20,8 +20,8 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	admin := r.Group("/admin")
 	{
-		admin.POST("/novel", admin_handler.CreateNovel)
-		admin.POST("/:novel/chapter", admin_handler.CreateChapter)
+		admin.POST("/novel", middleware.ValidateToken(), middleware.IsAdmin(), admin_handler.CreateNovel)
+		admin.POST("/:novel/chapter", middleware.ValidateToken(), middleware.IsAdmin(), admin_handler.CreateChapter)
 	}
 
 	auth := r.Group("/auth")
