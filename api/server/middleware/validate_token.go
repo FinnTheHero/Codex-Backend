@@ -14,8 +14,10 @@ import (
 func ValidateToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString, err := c.Cookie("Authorization")
-		if err != nil || tokenString == "" {
-			c.Next()
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": err.Error(),
+			})
 			return
 		}
 
@@ -36,7 +38,7 @@ func ValidateToken() gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(*models.Claims); ok && token.Valid {
 			// Check token expiration
-			if time.Now().Unix() > claims.ExpiresAt.Time.Unix() {
+			if time.Now().After(time.Unix(claims.ExpiresAt.Unix(), 0)) {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 					"error": "Token expired",
 				})
