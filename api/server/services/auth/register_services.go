@@ -10,6 +10,8 @@ import (
 func (s *AuthService) RegisterUser(credentials models.NewUser) error {
 
 	var user models.User
+	user.Email = credentials.Email
+	user.Username = credentials.Username
 
 	// Check if user already exists
 	result, err := aws_services.GetUser(credentials.Email)
