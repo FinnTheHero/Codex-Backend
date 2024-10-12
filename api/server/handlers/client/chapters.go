@@ -30,7 +30,7 @@ func FindChapter(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusFound,
+	c.JSON(http.StatusOK,
 		gin.H{"chapter": chapter},
 	)
 	return
@@ -55,7 +55,7 @@ func FindAllChapters(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusFound,
+	c.JSON(http.StatusOK,
 		gin.H{"chapters": chapters},
 	)
 	return

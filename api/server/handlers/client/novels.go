@@ -35,7 +35,7 @@ func FindNovel(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusFound, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"novel": novel.Novel,
 	})
 	return
@@ -64,7 +64,7 @@ func FindAllNovels(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusFound, gin.H{
+	c.JSON(http.StatusOK, gin.H{
 		"novels": novels,
 	})
 	return
