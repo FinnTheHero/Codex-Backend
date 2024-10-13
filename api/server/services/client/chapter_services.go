@@ -3,7 +3,6 @@ package client_services
 import (
 	aws_services "Codex-Backend/api/aws/services"
 	"errors"
-	"strings"
 )
 
 type ChapterService struct{}
@@ -13,7 +12,7 @@ func NewChapterService() *ChapterService {
 }
 
 func (s *ChapterService) GetChapter(novel, chapter string) (interface{}, error) {
-	novel = strings.ReplaceAll(novel, " ", "_")
+	// novel = strings.ReplaceAll(novel, " ", "_")
 
 	tables, err := aws_services.GetTables()
 	if err != nil {
@@ -30,7 +29,7 @@ func (s *ChapterService) GetChapter(novel, chapter string) (interface{}, error) 
 }
 
 func (s *ChapterService) GetAllChapters(novel string) (interface{}, error) {
-	novel = strings.ReplaceAll(novel, " ", "_")
+	// novel = strings.ReplaceAll(novel, " ", "_")
 
 	tables, err := aws_services.GetTables()
 	if err != nil {

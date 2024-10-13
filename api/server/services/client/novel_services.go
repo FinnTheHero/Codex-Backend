@@ -2,7 +2,6 @@ package client_services
 
 import (
 	aws_services "Codex-Backend/api/aws/services"
-	"strings"
 )
 
 type NovelService struct{}
@@ -12,9 +11,9 @@ func NewNovelService() *NovelService {
 }
 
 func (s *NovelService) GetNovel(novel string) (interface{}, error) {
-	title := strings.ReplaceAll(novel, " ", "_")
+	// title := strings.ReplaceAll(novel, " ", "_")
 
-	NovelSchema, err := aws_services.GetNovel(title)
+	NovelSchema, err := aws_services.GetNovel(novel)
 	if err != nil {
 		return nil, err
 	}
