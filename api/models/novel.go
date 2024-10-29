@@ -12,7 +12,7 @@ type Novel struct {
 }
 
 type NovelDTO struct {
-	Title  string
-	Author string
-	Novel  Novel
+	Title  string `json:"title"`
+	Author string `json:"author"`
+	Novel  Novel  `json:"novel"`
 }
