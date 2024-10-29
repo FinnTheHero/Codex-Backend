@@ -56,7 +56,7 @@ func FindAllNovels(c *gin.Context) {
 		return
 	}
 
-	novels, ok := result.([]models.NovelDTO)
+	novels, ok := result.([]models.Novel)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Type assertion failed",

@@ -2,6 +2,8 @@ package client_services
 
 import (
 	aws_services "Codex-Backend/api/aws/services"
+	"Codex-Backend/api/models"
+	"errors"
 )
 
 type NovelService struct{}
@@ -22,10 +24,20 @@ func (s *NovelService) GetNovel(novel string) (interface{}, error) {
 }
 
 func (s *NovelService) GetAllNovels() (interface{}, error) {
-	Novels, err := aws_services.GetAllNovels()
+	result, err := aws_services.GetAllNovels()
 	if err != nil {
 		return nil, err
 	}
 
-	return Novels, nil
+	NovelDTOs, ok := result.([]models.NovelDTO)
+	if !ok {
+		return nil, errors.New("Type assertion failed")
+	}
+
+	var novels []models.Novel
+	for _, dto := range NovelDTOs {
+		novels = append(novels, dto.Novel)
+	}
+
+	return novels, nil
 }
