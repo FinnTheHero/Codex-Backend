@@ -27,7 +27,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	auth := r.Group("/auth")
 	{
 		auth.GET("/validate", middleware.ValidateToken(), auth_handler.ValidateToken)
-		auth.GET("/login", auth_handler.LoginUser)
+		auth.POST("/login", auth_handler.LoginUser)
 		auth.POST("/register", auth_handler.RegisterUser)
 	}
 
