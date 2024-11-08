@@ -8,8 +8,6 @@ import (
 )
 
 func ValidateToken(c *gin.Context) {
-	var user models.User
-
 	// Get user from context
 	result, ok := c.Get("user")
 	if !ok {
@@ -20,7 +18,7 @@ func ValidateToken(c *gin.Context) {
 	}
 
 	// Cast user to User struct
-	user, ok = result.(models.User)
+	_, ok = result.(models.User)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Type assertion failed",
@@ -29,7 +27,7 @@ func ValidateToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"user": user,
+		"authenticated": true,
 	})
 	return
 }
