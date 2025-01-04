@@ -18,7 +18,7 @@ func ValidateToken(c *gin.Context) {
 	}
 
 	// Cast user to User struct
-	_, ok = result.(models.User)
+	user, ok := result.(models.User)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Type assertion failed",
@@ -27,6 +27,11 @@ func ValidateToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
+		"user": gin.H{
+			"username": user.Username,
+			"email":    user.Email,
+			"type":     user.Type,
+		},
 		"authenticated": true,
 	})
 	return
