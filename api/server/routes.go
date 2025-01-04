@@ -6,10 +6,42 @@ import (
 	client_handler "Codex-Backend/api/server/handlers/client"
 	"Codex-Backend/api/server/middleware"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func RegisteredRoutes(r *gin.Engine) {
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:3000",           // Local
+			"https://codex-reader.vercel.app", // Remote TODO: change this to include url from env later.
+		},
+		AllowMethods: []string{
+			"GET",
+			"POST",
+			"PUT",
+			"PATCH",
+			"DELETE",
+			"OPTIONS",
+		},
+		AllowHeaders: []string{
+			"Origin",
+			"Content-Type",
+			"Content-Length",
+			"Accept-Encoding",
+			"X-CSRF-Token",
+			"X-Requested-With",
+			"Authorization",
+			"Accept",
+			"Acces-Control-Allow-Origin",
+		},
+		ExposeHeaders: []string{
+			"Content-Length",
+		},
+		AllowCredentials: true,
+	}))
+
 	client := r.Group("/")
 	{
 		client.GET("/all", client_handler.FindAllNovels)
@@ -28,6 +60,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	{
 		auth.GET("/validate", middleware.ValidateToken(), auth_handler.ValidateToken)
 		auth.POST("/login", auth_handler.LoginUser)
+		auth.POST("/logout", auth_handler.LogoutUser)
 		auth.POST("/register", auth_handler.RegisterUser)
 	}
 
