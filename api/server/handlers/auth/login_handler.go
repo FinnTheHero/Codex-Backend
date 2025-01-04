@@ -25,7 +25,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	token, err := authService.LoginUser(credentials)
+	token, user, err := authService.LoginUser(credentials)
 	if err != nil {
 		statusError := http.StatusInternalServerError
 
@@ -46,7 +46,12 @@ func LoginUser(c *gin.Context) {
 	c.SetCookie("Authorization", token, 3600*24, "", "", true, true)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Loogin successful",
+		"user": gin.H{
+			"username": user.Username,
+			"email":    user.Email,
+			"type":     user.Type,
+		},
+		"authorized": true,
 	})
 	return
 
