@@ -36,6 +36,47 @@ func FindChapter(c *gin.Context) {
 	return
 }
 
+func FindPreviousAndNextChapters(c *gin.Context) {
+	novel := c.Param("novel")
+	title := c.Param("chapter")
+
+	result, err := chapterService.GetAllChapters(novel)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"error": err.Error()},
+		)
+		return
+	}
+
+	chapters, ok := result.([]models.Chapter)
+	if !ok {
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"error": "Type assertion failed"},
+		)
+		return
+	}
+
+	prev_next := []models.Chapter{}
+
+	for i, chapter := range chapters {
+		if chapter.Title == title {
+			if i > 0 {
+				prev_next = append(prev_next, chapters[i-1])
+			}
+			prev_next = append(prev_next, chapter)
+			if i < len(chapters)-1 {
+				prev_next = append(prev_next, chapters[i+1])
+			}
+			break
+		}
+	}
+
+	c.JSON(http.StatusOK,
+		gin.H{"chapters": prev_next},
+	)
+	return
+}
+
 func FindAllChapters(c *gin.Context) {
 	novel := c.Param("novel")
 
