@@ -44,26 +44,27 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	client := r.Group("/")
 	{
+		client.Use(middleware.RateLimiter)
 		client.GET("/all", client_handler.FindAllNovels)
 		client.GET("/:novel", client_handler.FindNovel)
 		client.GET("/:novel/all", client_handler.FindAllChapters)
 		client.GET("/:novel/:chapter", client_handler.FindChapter)
+		client.GET("/:novel/:chapter/next-previous", client_handler.FindPreviousAndNextChapters)
 	}
 
 	admin := r.Group("/admin")
 	{
+		admin.Use(middleware.RateLimiter)
 		admin.POST("/novel", middleware.ValidateToken(), middleware.IsAdmin(), admin_handler.CreateNovel)
 		admin.POST("/:novel/chapter", middleware.ValidateToken(), middleware.IsAdmin(), admin_handler.CreateChapter)
 	}
 
 	auth := r.Group("/auth")
 	{
+		auth.Use(middleware.RateLimiter)
 		auth.GET("/validate", middleware.ValidateToken(), auth_handler.ValidateToken)
 		auth.POST("/login", auth_handler.LoginUser)
 		auth.POST("/logout", auth_handler.LogoutUser)
 		auth.POST("/register", auth_handler.RegisterUser)
 	}
-
-	// Change this to a more specific CORS policy in production
-	// admin.Use(cors.Default())
 }
