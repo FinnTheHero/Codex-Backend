@@ -3,6 +3,8 @@ package handlers
 import (
 	"Codex-Backend/api/internal/domain"
 	auth_service "Codex-Backend/api/internal/usecases/auth"
+	error_service "Codex-Backend/api/internal/usecases/error"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,11 +34,11 @@ func RegisterUser(c *gin.Context) {
 	if err != nil {
 		statusError := http.StatusInternalServerError
 
-		if err.Error() == "Email already in use" {
+		if errors.Is(err, error_service.ErrEmailTaken) {
 			statusError = http.StatusConflict
 		}
 
-		if err.Error() == "User not found" {
+		if errors.Is(err, error_service.ErrUserNotFound) {
 			statusError = http.StatusNotFound
 		}
 
