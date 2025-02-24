@@ -9,12 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var novelService = novel_service.NewNovelService()
+
 
 func FindNovel(c *gin.Context) {
 	title := c.Param("novel")
 
-	result, err := novelService.GetNovel(title)
+	result, err := novel_service.GetNovel(title)
 	if err != nil {
 		errStatus := http.StatusInternalServerError
 
@@ -43,7 +43,7 @@ func FindNovel(c *gin.Context) {
 }
 
 func FindAllNovels(c *gin.Context) {
-	result, err := novelService.GetAllNovels()
+	result, err := novel_service.GetAllNovels()
 	if err != nil {
 		errStatus := http.StatusInternalServerError
 

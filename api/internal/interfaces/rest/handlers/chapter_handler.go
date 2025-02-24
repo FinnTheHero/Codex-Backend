@@ -8,13 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var chapterService = chapter_service.NewChapterService()
-
 func FindChapter(c *gin.Context) {
 	novel := c.Param("novel")
 	title := c.Param("chapter")
 
-	chapter, err := chapterService.GetChapter(novel, title)
+	chapter, err := chapter_service.GetChapter(novel, title)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError,
 			gin.H{"error": err.Error()},
@@ -32,7 +30,7 @@ func FindPreviousAndNextChapters(c *gin.Context) {
 	novel := c.Param("novel")
 	title := c.Param("chapter")
 
-	chapters, err := chapterService.GetAllChapters(novel)
+	chapters, err := chapter_service.GetAllChapters(novel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError,
 			gin.H{"error": err.Error()},
@@ -65,7 +63,7 @@ func FindPreviousAndNextChapters(c *gin.Context) {
 func FindAllChapters(c *gin.Context) {
 	novel := c.Param("novel")
 
-	chapters, err := chapterService.GetAllChapters(novel)
+	chapters, err := chapter_service.GetAllChapters(novel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError,
 			gin.H{"error": err.Error()},

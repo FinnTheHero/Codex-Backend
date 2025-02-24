@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func (s *AuthService) RegisterUser(credentials domain.NewUser) error {
+func RegisterUser(credentials domain.NewUser) error {
 
 	var user domain.User
 	user.Email = credentials.Email

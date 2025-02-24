@@ -8,13 +8,8 @@ import (
 	"strings"
 )
 
-type AdminService struct{}
 
-func NewAdminService() *AdminService {
-	return &AdminService{}
-}
-
-func (s *AdminService) CreateNovel(novel domain.Novel) error {
+func CreateNovel(novel domain.Novel) error {
 	tableExists, err := table.IsTableCreated(novel.Title)
 	if err != nil {
 		return err
@@ -37,7 +32,7 @@ func (s *AdminService) CreateNovel(novel domain.Novel) error {
 	return nil
 }
 
-func (s *AdminService) CreateChapter(novel string, chapter domain.Chapter) error {
+func CreateChapter(novel string, chapter domain.Chapter) error {
 	novel = strings.ReplaceAll(novel, " ", "_")
 
 	tableExists, err := table.IsTableCreated(novel)

@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-func (s *AuthService) LoginUser(credentials domain.Credentials) (string, domain.User, error) {
+func LoginUser(credentials domain.Credentials) (string, domain.User, error) {
 	var user domain.User
 
 	// Check if user exists

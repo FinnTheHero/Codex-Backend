@@ -8,13 +8,8 @@ import (
 	"slices"
 )
 
-type ChapterService struct{}
 
-func NewChapterService() *ChapterService {
-	return &ChapterService{}
-}
-
-func (s *ChapterService) GetChapter(novel, chapter string) (domain.Chapter, error) {
+func GetChapter(novel, chapter string) (domain.Chapter, error) {
 	// novel = strings.ReplaceAll(novel, " ", "_")
 
 	tables, err := table.GetTables()
@@ -29,7 +24,7 @@ func (s *ChapterService) GetChapter(novel, chapter string) (domain.Chapter, erro
 	return domain.Chapter{}, errors.New("Novel not found")
 }
 
-func (s *ChapterService) GetAllChapters(novel string) ([]domain.Chapter, error) {
+func GetAllChapters(novel string) ([]domain.Chapter, error) {
 	// novel = strings.ReplaceAll(novel, " ", "_")
 
 	tables, err := table.GetTables()

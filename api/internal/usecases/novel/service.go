@@ -6,13 +6,7 @@ import (
 	"errors"
 )
 
-type NovelService struct{}
-
-func NewNovelService() *NovelService {
-	return &NovelService{}
-}
-
-func (s *NovelService) GetNovel(novel string) (interface{}, error) {
+func GetNovel(novel string) (any, error) {
 	// title := strings.ReplaceAll(novel, " ", "_")
 
 	NovelSchema, err := repository.GetNovel(novel)
@@ -23,7 +17,7 @@ func (s *NovelService) GetNovel(novel string) (interface{}, error) {
 	return NovelSchema, nil
 }
 
-func (s *NovelService) GetAllNovels() (interface{}, error) {
+func GetAllNovels() (any, error) {
 	result, err := repository.GetAllNovels()
 	if err != nil {
 		return nil, err

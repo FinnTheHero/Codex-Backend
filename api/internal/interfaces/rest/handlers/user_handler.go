@@ -8,8 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var authService = auth_service.NewAuthService()
-
 func RegisterUser(c *gin.Context) {
 
 	var user domain.NewUser
@@ -30,7 +28,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	err := authService.RegisterUser(user)
+	err := auth_service.RegisterUser(user)
 	if err != nil {
 		statusError := http.StatusInternalServerError
 
@@ -75,7 +73,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	token, user, err := authService.LoginUser(credentials)
+	token, user, err := auth_service.LoginUser(credentials)
 	if err != nil {
 		statusError := http.StatusInternalServerError
 

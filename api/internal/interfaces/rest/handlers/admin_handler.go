@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var adminService = user_service.NewAdminService()
 
 func CreateNovel(c *gin.Context) {
 	var novel domain.Novel
@@ -20,7 +19,7 @@ func CreateNovel(c *gin.Context) {
 		return
 	}
 
-	err := adminService.CreateNovel(novel)
+	err := user_service.CreateNovel(novel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -44,7 +43,7 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	err := adminService.CreateChapter(novel, chapter)
+	err := user_service.CreateChapter(novel, chapter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
