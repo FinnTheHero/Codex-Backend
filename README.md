@@ -17,6 +17,7 @@ It is deployed on `Heroku`.
     Middleware will check if user has a token, if its valid it will return user data.
     Otherwise it will be redirected to login handler where provided credentials will be used to login.
     Finally it will return token as a cookie.
+
     ```json
     // Request body example
     {
@@ -31,7 +32,7 @@ It is deployed on `Heroku`.
     {
         "username": "user",
         "password": "password",
-        "email": "example@mail",
+        "email": "example@mail"
     }
     ```
 
@@ -45,6 +46,7 @@ It is deployed on `Heroku`.
 ### Group: `admin` - `/admin`
 
 - `POST` - `/novel` - Create novel
+
     ```json
     // Request body example
     {
@@ -58,6 +60,7 @@ It is deployed on `Heroku`.
     ```
 
 - `POST` - `/:novel/chapter` - Create chapter to novel
+
     ```json
     // Request body example
     {
@@ -72,16 +75,19 @@ It is deployed on `Heroku`.
     ```
 
 - `PUT` - `/:novel` - Update novel
+
     ```json
     // TODO
     ```
 
 - `PUT` - `/:novel/:chapter` - Update chapter
+
     ```json
     // TODO
     ```
 
 - `DELETE` - `/:novel` - Delete novel
+
     ```json
     // TODO
     ```
@@ -91,22 +97,28 @@ It is deployed on `Heroku`.
     // TODO
     ```
 
-
 ## Development
 
 ### Setup
 
--   clone repo
+- clone repo
     ```bash
     git clone -b Development https://github.com/FinnTheHero/Codex-Backend.git
     ```
--   create `.env` in root directory of the project
+- create `.env` in root directory of the project
     ```bash
     cd "Codex-Backend" && touch .env
     ```
--   add AWS credentials to `.env` file
+- add AWS credentials to `.env` file
     ```bash
     AWS_ACCESS_KEY_ID = "" # Add your keys here
     AWS_SECRET_ACCESS_KEY = "" # Add your keys here
     AWS_REGION = "eu-central-1" # Change region if needed
+    ```
+
+### Run
+
+- run server:
+    ```bash
+    go run api/cmd/codex/main.go
     ```
