@@ -6,7 +6,7 @@ Backend for Codex - novel reader app.
 
 Codex-Backend is built in `GoLang`, using `Gin` for server and `AWS-dynamoDB` for database.
 
-It is deployed on `Heroku`.
+It is deployed on `Heroku` (thats why the code is in api directory).
 
 ## Endpoints
 
@@ -14,12 +14,11 @@ It is deployed on `Heroku`.
 
 - GET - `/login` - Login user
 
-    Middleware will check if user has a token, if its valid it will return user data.
+    Middleware will check if user has a token, if its valid it will return user data(i should fix that, i should also update time for existing token).
     Otherwise it will be redirected to login handler where provided credentials will be used to login.
     Finally it will return token as a cookie.
 
     ```json
-    // Request body example
     {
         "email": "email",
         "password": "password"
@@ -28,7 +27,6 @@ It is deployed on `Heroku`.
 
 - POST - `/register` - Register user
     ```json
-    // Request body example
     {
         "username": "user",
         "password": "password",
@@ -48,7 +46,6 @@ It is deployed on `Heroku`.
 - `POST` - `/novel` - Create novel
 
     ```json
-    // Request body example
     {
         "title": "Novel",
         "author": "Author",
@@ -59,10 +56,9 @@ It is deployed on `Heroku`.
     }
     ```
 
-- `POST` - `/:novel/chapter` - Create chapter to novel
+- `POST` - `/:novel/chapter` - Create chapter in specified novel
 
     ```json
-    // Request body example
     {
         "title": "Chapter",
         "author": "Author",
