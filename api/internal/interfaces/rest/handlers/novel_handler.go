@@ -16,13 +16,7 @@ func FindNovel(c *gin.Context) {
 
 	result, err := novel_service.GetNovel(title)
 	if err != nil {
-		errStatus := http.StatusInternalServerError
-
-		if err.Error() == (title + " not found") {
-			errStatus = http.StatusNotFound
-		}
-
-		c.JSON(errStatus, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -45,13 +39,7 @@ func FindNovel(c *gin.Context) {
 func FindAllNovels(c *gin.Context) {
 	result, err := novel_service.GetAllNovels()
 	if err != nil {
-		errStatus := http.StatusInternalServerError
-
-		if err.Error() == "No novels found" {
-			errStatus = http.StatusNotFound
-		}
-
-		c.JSON(errStatus, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
 		})
 		return
