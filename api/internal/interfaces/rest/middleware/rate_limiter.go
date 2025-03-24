@@ -7,7 +7,7 @@ import (
 	"golang.org/x/time/rate"
 )
 
-var limiter = rate.NewLimiter(1, 10)
+var limiter = rate.NewLimiter(1, 20)
 
 func RateLimiter(c *gin.Context) {
 	if !limiter.Allow() {
