@@ -14,8 +14,9 @@ func FindChapter(c *gin.Context) {
 
 	chapter, err := chapter_service.GetChapter(novel, title)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError,
-			gin.H{"error": err.Error()},
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": err.Error(),
+		},
 		)
 		return
 	}
@@ -32,12 +33,11 @@ func FindPreviousAndNextChapters(c *gin.Context) {
 
 	chapters, err := chapter_service.GetAllChapters(novel)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError,
+		c.JSON(http.StatusNotFound,
 			gin.H{"error": err.Error()},
 		)
 		return
 	}
-
 
 	prev_next := []domain.Chapter{}
 
@@ -65,7 +65,7 @@ func FindAllChapters(c *gin.Context) {
 
 	chapters, err := chapter_service.GetAllChapters(novel)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError,
+		c.JSON(http.StatusNotFound,
 			gin.H{"error": err.Error()},
 		)
 		return
