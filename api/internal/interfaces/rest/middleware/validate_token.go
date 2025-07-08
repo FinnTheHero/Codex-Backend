@@ -56,24 +56,16 @@ func ValidateToken() gin.HandlerFunc {
 			}
 
 			// Find user
-			result, err := repository.GetUser(claims.Email)
+			user, err := repository.GetUser(claims.Email)
 			if err != nil {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 					"error": err.Error(),
 				})
 				return
 			}
 
-			userDTO, ok := result.(domain.UserDTO)
-			if !ok {
-				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-					"error": "Error casting user",
-				})
-				return
-			}
-
 			// Check user email
-			if userDTO.Email == "" || userDTO.Email != claims.Email {
+			if user.Email == "" || user.Email != claims.Email {
 				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 					"error": "User not found",
 				})
@@ -81,7 +73,7 @@ func ValidateToken() gin.HandlerFunc {
 			}
 
 			// Set user in context
-			c.Set("user", userDTO.User)
+			c.Set("user", user)
 
 			// Continue to handler
 			c.Next()
