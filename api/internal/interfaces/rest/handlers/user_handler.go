@@ -53,9 +53,7 @@ func RegisterUser(c *gin.Context) {
 		"message": "User created successfully",
 	})
 	c.Abort()
-	return
 }
-
 
 func LoginUser(c *gin.Context) {
 
@@ -103,7 +101,6 @@ func LoginUser(c *gin.Context) {
 		},
 		"authorized": true,
 	})
-	return
 }
 
 func LogoutUser(c *gin.Context) {
@@ -123,7 +120,6 @@ func ValidateToken(c *gin.Context) {
 		return
 	}
 
-	// Cast user to User struct
 	user, ok := result.(domain.User)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -140,5 +136,4 @@ func ValidateToken(c *gin.Context) {
 		},
 		"authenticated": true,
 	})
-	return
 }
