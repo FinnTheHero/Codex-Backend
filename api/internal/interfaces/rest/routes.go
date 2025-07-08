@@ -40,6 +40,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	client := r.Group("/")
 	{
 		client.Use(middleware.RateLimiter)
+		client.Use(middleware.VerifyUsersTablesExist())
 		client.GET("/all", handlers.FindAllNovels)
 		client.GET("/:novel", handlers.FindNovel)
 		client.GET("/:novel/all", handlers.FindAllChapters)
@@ -50,6 +51,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	admin := r.Group("/admin")
 	{
 		admin.Use(middleware.RateLimiter)
+		admin.Use(middleware.VerifyNovelsTableExists())
 		admin.POST("/novel", middleware.ValidateToken(), middleware.IsAdmin(), handlers.CreateNovel)
 		admin.POST("/:novel/chapter", middleware.ValidateToken(), middleware.IsAdmin(), handlers.CreateChapter)
 	}
@@ -57,6 +59,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	auth := r.Group("/auth")
 	{
 		auth.Use(middleware.RateLimiter)
+		auth.Use(middleware.VerifyUsersTablesExist())
 		auth.GET("/validate", middleware.ValidateToken(), handlers.ValidateToken)
 		auth.POST("/login", handlers.LoginUser)
 		auth.POST("/logout", handlers.LogoutUser)
