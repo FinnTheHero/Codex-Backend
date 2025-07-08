@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"Codex-Backend/api/internal/domain"
-	user_service "Codex-Backend/api/internal/usecases/user"
+	chapter_service "Codex-Backend/api/internal/usecases/chapter"
+	novel_service "Codex-Backend/api/internal/usecases/novel"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
-
 
 func CreateNovel(c *gin.Context) {
 	var novel domain.Novel
@@ -19,7 +19,7 @@ func CreateNovel(c *gin.Context) {
 		return
 	}
 
-	err := user_service.CreateNovel(novel)
+	err := novel_service.CreateNovel(novel)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -43,7 +43,7 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	err := user_service.CreateChapter(novel, chapter)
+	err := chapter_service.CreateChapter(novel, chapter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
