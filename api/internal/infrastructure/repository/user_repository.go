@@ -11,6 +11,41 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
+func CreateUsersTable() error {
+
+	db, err := database.GetDynamoDBSession()
+	if err != nil {
+		return err
+	}
+
+	input := &dynamodb.CreateTableInput{
+		AttributeDefinitions: []*dynamodb.AttributeDefinition{
+			{
+				AttributeName: aws.String("ID"),
+				AttributeType: aws.String("S"),
+			},
+		},
+		KeySchema: []*dynamodb.KeySchemaElement{
+			{
+				AttributeName: aws.String("ID"),
+				KeyType:       aws.String("HASH"),
+			},
+		},
+		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+			ReadCapacityUnits:  aws.Int64(1),
+			WriteCapacityUnits: aws.Int64(1),
+		},
+		TableName: aws.String("Users"),
+	}
+
+	_, err = db.CreateTable(input)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func VerifyUsersTable() error {
 	tableExists, err := table.IsTableCreated("Users")
 	if err != nil {
@@ -18,54 +53,86 @@ func VerifyUsersTable() error {
 	}
 
 	if !tableExists {
-		return table.CreateUsersTable()
+		return CreateUsersTable()
 	}
 
 	return nil
 }
 
-/*
-Find and return user.
-
-Returns UserDTO as interface.
-*/
-func GetUser(email string) (any, error) {
+func GetUser(email string) (domain.User, error) {
 
 	err := VerifyUsersTable()
 	if err != nil {
-		return nil, errors.New("Could not verify Users table" + err.Error())
+		return domain.User{}, errors.New("Could not verify Users table" + err.Error())
 	}
 
+	// db, err := database.GetDynamoDBSession()
+
+	// if err != nil {
+	// 	return domain.User{}, err
+	// }
+
+	user := domain.User{}
+
+	listOfUsers, err := getAllUsers()
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	for _, u := range listOfUsers {
+		if u.Email == email {
+			user = u
+			break
+		}
+	}
+
+	// result, err := db.GetItem(&dynamodb.GetItemInput{
+	// 	TableName: aws.String("Users"),
+	// 	Key: map[string]*dynamodb.AttributeValue{
+	// 		"ID": {
+	// 			S: aws.String(email),
+	// 		},
+	// 	},
+	// })
+	// if err != nil {
+	// 	return domain.User{}, err
+	// }
+
+	// if result.Item == nil {
+	// 	return domain.User{}, errors.New("User not found")
+	// }
+
+	// err = dynamodbattribute.UnmarshalMap(result.Item, &user)
+	// if err != nil {
+	// 	return domain.User{}, err
+	// }
+
+	return user, nil
+}
+
+func getAllUsers() ([]domain.User, error) {
 	db, err := database.GetDynamoDBSession()
 
 	if err != nil {
-		return nil, err
+		return []domain.User{}, err
 	}
 
-	result, err := db.GetItem(&dynamodb.GetItemInput{
+	result, err := db.Scan(&dynamodb.ScanInput{
 		TableName: aws.String("Users"),
-		Key: map[string]*dynamodb.AttributeValue{
-			"Email": {
-				S: aws.String(email),
-			},
-		},
 	})
+
 	if err != nil {
-		return nil, err
+		return []domain.User{}, err
 	}
 
-	if result.Item == nil {
-		return nil, errors.New("User not found")
-	}
+	users := []domain.User{}
 
-	user := domain.UserDTO{}
-
-	err = dynamodbattribute.UnmarshalMap(result.Item, &user)
+	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &users)
 	if err != nil {
-		return nil, err
+		return []domain.User{}, err
 	}
 
-	return user, nil
+	return users, nil
 }
 
 /* Create new user */
@@ -77,23 +144,32 @@ func CreateUser(user domain.User) error {
 	}
 
 	db, err := database.GetDynamoDBSession()
-
-	if err != nil {
-		return err
-	}
-
-	av, err := dynamodbattribute.MarshalMap(user)
 	if err != nil {
 		return err
 	}
 
 	input := &dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
+			"ID": {
+				S: aws.String(user.ID),
+			},
+			"Username": {
+				S: aws.String(user.Username),
+			},
+			"Password": {
+				S: aws.String(user.Password),
+			},
 			"Email": {
 				S: aws.String(user.Email),
 			},
-			"User": {
-				M: av,
+			"Type": {
+				S: aws.String(user.Type),
+			},
+			"CreatedAt": {
+				S: aws.String(user.CreatedAt),
+			},
+			"UpdatedAt": {
+				S: aws.String(user.UpdatedAt),
 			},
 		},
 		TableName: aws.String("Users"),
