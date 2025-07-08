@@ -3,36 +3,31 @@ package table
 import (
 	"Codex-Backend/api/internal/infrastructure/database"
 	"slices"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-/* Checks if table exists */
-func IsTableCreated(tableName string) (bool, error) {
-	tableNames, err := GetTables()
+func IsTableCreated(id string) (bool, error) {
+	ids, err := GetTableIds()
 	if err != nil {
 		return false, err
 	}
 
-
-	if slices.Contains(tableNames, tableName) {
+	if slices.Contains(ids, id) {
 		return true, nil
 	}
 
 	return false, nil
 }
 
-/* Returns a list of tables */
-func GetTables() ([]string, error) {
-
+func GetTableIds() ([]string, error) {
 	db, err := database.GetDynamoDBSession()
 	if err != nil {
 		return nil, err
 	}
 
-	tableNames := []string{}
+	ids := []string{}
 
 	input := &dynamodb.ListTablesInput{}
 
@@ -44,7 +39,7 @@ func GetTables() ([]string, error) {
 		}
 
 		for _, n := range result.TableNames {
-			tableNames = append(tableNames, *n)
+			ids = append(ids, *n)
 		}
 
 		// assign the last read tablename as the start for our next call to the ListTables function
@@ -57,56 +52,10 @@ func GetTables() ([]string, error) {
 		}
 	}
 
-	return tableNames, nil
+	return ids, nil
 }
 
-/*
-Creates a table with the title as the table name.
-
-`title` can only contain letters, numbers, underscores, dot and hyphens  -  No spaces!
-*/
-func CreateTable(title string) error {
-
-	db, err := database.GetDynamoDBSession()
-	if err != nil {
-		return err
-	}
-
-	tableName := title
-
-	finalTableName := strings.ReplaceAll(tableName, " ", "_")
-
-	input := &dynamodb.CreateTableInput{
-		AttributeDefinitions: []*dynamodb.AttributeDefinition{
-			{
-				AttributeName: aws.String("Title"),
-				AttributeType: aws.String("S"),
-			},
-		},
-		KeySchema: []*dynamodb.KeySchemaElement{
-			{
-				AttributeName: aws.String("Title"),
-				KeyType:       aws.String("HASH"),
-			},
-		},
-		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(1),
-			WriteCapacityUnits: aws.Int64(1),
-		},
-		TableName: aws.String(finalTableName),
-	}
-
-	_, err = db.CreateTable(input)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-/* Create 'Users' table */
-func CreateUsersTable() error {
-
+func CreateTable(id string) error {
 	db, err := database.GetDynamoDBSession()
 	if err != nil {
 		return err
@@ -115,13 +64,13 @@ func CreateUsersTable() error {
 	input := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
-				AttributeName: aws.String("Email"),
+				AttributeName: aws.String("ID"),
 				AttributeType: aws.String("S"),
 			},
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
-				AttributeName: aws.String("Email"),
+				AttributeName: aws.String("ID"),
 				KeyType:       aws.String("HASH"),
 			},
 		},
@@ -129,10 +78,24 @@ func CreateUsersTable() error {
 			ReadCapacityUnits:  aws.Int64(1),
 			WriteCapacityUnits: aws.Int64(1),
 		},
-		TableName: aws.String("Users"),
+		TableName: aws.String(id),
 	}
 
 	_, err = db.CreateTable(input)
+	return err
+}
+
+func DeleteTable(id string) error {
+	db, err := database.GetDynamoDBSession()
+	if err != nil {
+		return err
+	}
+
+	input := &dynamodb.DeleteTableInput{
+		TableName: aws.String(id),
+	}
+
+	_, err = db.DeleteTable(input)
 	if err != nil {
 		return err
 	}
