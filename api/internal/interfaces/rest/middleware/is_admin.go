@@ -37,6 +37,5 @@ func IsAdmin() gin.HandlerFunc {
 		}
 
 		c.Next()
-		return
 	}
 }
