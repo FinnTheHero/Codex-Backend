@@ -3,12 +3,26 @@ package repository
 import (
 	"Codex-Backend/api/internal/domain"
 	"Codex-Backend/api/internal/infrastructure/database"
+	"Codex-Backend/api/internal/infrastructure/table"
 	"errors"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
+
+func VerifyNovelsTable() error {
+	tableExists, err := table.IsTableCreated("Novels")
+	if err != nil {
+		return err
+	}
+
+	if !tableExists {
+		return table.CreateTable("Novels")
+	}
+
+	return nil
+}
 
 func GetNovel(id string) (domain.Novel, error) {
 
