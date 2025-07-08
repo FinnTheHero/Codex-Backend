@@ -47,7 +47,7 @@ func GetChapter(novel, title string) (domain.Chapter, error) {
 }
 
 /* Return every chapter from novel */
-func GetAllChapters(novel string) ([]domain.Chapter, error) {
+func GetAllChapters(novelId string) ([]domain.Chapter, error) {
 
 	db, err := database.GetDynamoDBSession()
 
@@ -56,7 +56,7 @@ func GetAllChapters(novel string) ([]domain.Chapter, error) {
 	}
 
 	result, err := db.Scan(&dynamodb.ScanInput{
-		TableName: aws.String(novel),
+		TableName: aws.String(novelId),
 	})
 	if err != nil {
 		return nil, err
@@ -70,38 +70,47 @@ func GetAllChapters(novel string) ([]domain.Chapter, error) {
 	}
 
 	if len(chapters) == 0 {
-		return nil, errors.New("No chapters found for " + novel)
+		return nil, errors.New("No chapters found for " + novelId)
 	}
 
 	return chapters, nil
 }
 
-/* Add chapter to respective novel table. */
 func CreateChapter(novel string, chapter domain.Chapter) error {
-
 	db, err := database.GetDynamoDBSession()
 
 	if err != nil {
 		return err
 	}
 
-	tableName := novel
-
-	av, err := dynamodbattribute.MarshalMap(chapter)
-	if err != nil {
-		return err
-	}
-
 	input := &dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
+			"ID": {
+				S: aws.String(chapter.ID),
+			},
 			"Title": {
 				S: aws.String(chapter.Title),
 			},
-			"Chapter": {
-				M: av,
+			"Author": {
+				S: aws.String(chapter.Author),
+			},
+			"Description": {
+				S: aws.String(chapter.Description),
+			},
+			"CreationDate": {
+				S: aws.String(chapter.CreatedAt),
+			},
+			"UploadDate": {
+				S: aws.String(chapter.UploadedAt),
+			},
+			"UpdateDate": {
+				S: aws.String(chapter.UpdatedAt),
+			},
+			"Content": {
+				S: aws.String(chapter.Content),
 			},
 		},
-		TableName: aws.String(tableName),
+		TableName: aws.String(novel),
 	}
 
 	_, err = db.PutItem(input)
