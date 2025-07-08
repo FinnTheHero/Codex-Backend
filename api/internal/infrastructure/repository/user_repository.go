@@ -11,41 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
-func CreateUsersTable() error {
-
-	db, err := database.GetDynamoDBSession()
-	if err != nil {
-		return err
-	}
-
-	input := &dynamodb.CreateTableInput{
-		AttributeDefinitions: []*dynamodb.AttributeDefinition{
-			{
-				AttributeName: aws.String("ID"),
-				AttributeType: aws.String("S"),
-			},
-		},
-		KeySchema: []*dynamodb.KeySchemaElement{
-			{
-				AttributeName: aws.String("ID"),
-				KeyType:       aws.String("HASH"),
-			},
-		},
-		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(1),
-			WriteCapacityUnits: aws.Int64(1),
-		},
-		TableName: aws.String("Users"),
-	}
-
-	_, err = db.CreateTable(input)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func VerifyUsersTable() error {
 	tableExists, err := table.IsTableCreated("Users")
 	if err != nil {
@@ -53,25 +18,13 @@ func VerifyUsersTable() error {
 	}
 
 	if !tableExists {
-		return CreateUsersTable()
+		return table.CreateTable("Users")
 	}
 
 	return nil
 }
 
 func GetUser(email string) (domain.User, error) {
-
-	err := VerifyUsersTable()
-	if err != nil {
-		return domain.User{}, errors.New("Could not verify Users table" + err.Error())
-	}
-
-	// db, err := database.GetDynamoDBSession()
-
-	// if err != nil {
-	// 	return domain.User{}, err
-	// }
-
 	user := domain.User{}
 
 	listOfUsers, err := getAllUsers()
@@ -85,27 +38,6 @@ func GetUser(email string) (domain.User, error) {
 			break
 		}
 	}
-
-	// result, err := db.GetItem(&dynamodb.GetItemInput{
-	// 	TableName: aws.String("Users"),
-	// 	Key: map[string]*dynamodb.AttributeValue{
-	// 		"ID": {
-	// 			S: aws.String(email),
-	// 		},
-	// 	},
-	// })
-	// if err != nil {
-	// 	return domain.User{}, err
-	// }
-
-	// if result.Item == nil {
-	// 	return domain.User{}, errors.New("User not found")
-	// }
-
-	// err = dynamodbattribute.UnmarshalMap(result.Item, &user)
-	// if err != nil {
-	// 	return domain.User{}, err
-	// }
 
 	return user, nil
 }
