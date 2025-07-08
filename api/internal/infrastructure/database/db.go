@@ -9,10 +9,15 @@ import (
 )
 
 var (
-	once sync.Once
+	once     sync.Once
 	instance *dynamodb.DynamoDB
-	initErr error
+	initErr  error
 )
+
+func NewDynamoDBSession() (*dynamodb.DynamoDB, error) {
+	awsSession, err := aws_session.GetAWSSession()
+	return dynamodb.New(awsSession), err
+}
 
 func GetDynamoDBSession() (*dynamodb.DynamoDB, error) {
 	once.Do(func() {
@@ -23,11 +28,4 @@ func GetDynamoDBSession() (*dynamodb.DynamoDB, error) {
 	})
 
 	return instance, initErr
-}
-
-func NewDynamoDBSession() (*dynamodb.DynamoDB, error) {
-
-	awsSession, err := aws_session.GetAWSSession()
-
-	return dynamodb.New(awsSession), err
 }
