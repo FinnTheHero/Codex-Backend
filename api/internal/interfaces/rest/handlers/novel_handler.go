@@ -9,12 +9,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
-
 func FindNovel(c *gin.Context) {
 	title := c.Param("novel")
 
-	result, err := novel_service.GetNovel(title)
+	novel, err := novel_service.GetNovel(title)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),
@@ -22,18 +20,9 @@ func FindNovel(c *gin.Context) {
 		return
 	}
 
-	novel, ok := result.(domain.NovelDTO)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Type assertion failed",
-		})
-		return
-	}
-
 	c.JSON(http.StatusOK, gin.H{
-		"novel": novel.Novel,
+		"novel": novel,
 	})
-	return
 }
 
 func FindAllNovels(c *gin.Context) {
@@ -56,5 +45,4 @@ func FindAllNovels(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"novels": novels,
 	})
-	return
 }
