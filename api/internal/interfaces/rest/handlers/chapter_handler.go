@@ -24,7 +24,6 @@ func FindChapter(c *gin.Context) {
 	c.JSON(http.StatusOK,
 		gin.H{"chapter": chapter},
 	)
-	return
 }
 
 func FindPreviousAndNextChapters(c *gin.Context) {
@@ -57,7 +56,6 @@ func FindPreviousAndNextChapters(c *gin.Context) {
 	c.JSON(http.StatusOK,
 		gin.H{"chapters": prev_next},
 	)
-	return
 }
 
 func FindAllChapters(c *gin.Context) {
@@ -74,5 +72,4 @@ func FindAllChapters(c *gin.Context) {
 	c.JSON(http.StatusOK,
 		gin.H{"chapters": chapters},
 	)
-	return
 }
