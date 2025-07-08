@@ -10,30 +10,30 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
 
-func GetNovel(title string) (any, error) {
+func GetNovel(id string) (domain.Novel, error) {
 
 	db, err := database.GetDynamoDBSession()
 	if err != nil {
-		return nil, err
+		return domain.Novel{}, err
 	}
 
 	result, err := db.GetItem(&dynamodb.GetItemInput{
 		TableName: aws.String("Novels"),
 		Key: map[string]*dynamodb.AttributeValue{
-			"Title": {
-				S: aws.String(title),
+			"ID": {
+				S: aws.String(id),
 			},
 		},
 	})
 	if err != nil {
-		return nil, err
+		return domain.Novel{}, err
 	}
 
 	if result.Item == nil {
-		return nil, errors.New("Could not find '" + title + "'")
+		return domain.Novel{}, errors.New("Could not find '" + id + "'")
 	}
 
-	novel := domain.NovelDTO{}
+	novel := domain.Novel{}
 
 	err = dynamodbattribute.UnmarshalMap(result.Item, &novel)
 	if err != nil {
@@ -41,7 +41,7 @@ func GetNovel(title string) (any, error) {
 	}
 
 	if novel.Title == "" {
-		return nil, errors.New(title + " Not Found")
+		return domain.Novel{}, errors.New(id + " Not Found")
 	}
 
 	return novel, nil
@@ -61,7 +61,7 @@ func GetAllNovels() (any, error) {
 		return nil, err
 	}
 
-	novels := []domain.NovelDTO{}
+	novels := []domain.Novel{}
 
 	err = dynamodbattribute.UnmarshalListOfMaps(result.Items, &novels)
 	if err != nil {
@@ -75,7 +75,7 @@ func GetAllNovels() (any, error) {
 	return novels, nil
 }
 
-/* Add Novel to the 'Novels' table */
+/* Add the new Novel to the Novels table */
 func CreateNovel(novel domain.Novel) error {
 
 	db, err := database.GetDynamoDBSession()
@@ -85,21 +85,28 @@ func CreateNovel(novel domain.Novel) error {
 
 	tableName := "Novels"
 
-	av, err := dynamodbattribute.MarshalMap(novel)
-	if err != nil {
-		return err
-	}
-
 	input := &dynamodb.PutItemInput{
 		Item: map[string]*dynamodb.AttributeValue{
+			"ID": {
+				S: aws.String(novel.ID),
+			},
 			"Title": {
 				S: aws.String(novel.Title),
 			},
 			"Author": {
 				S: aws.String(novel.Author),
 			},
-			"Novel": {
-				M: av,
+			"Description": {
+				S: aws.String(novel.Description),
+			},
+			"CreationDate": {
+				S: aws.String(novel.CreatedAt),
+			},
+			"UploadDate": {
+				S: aws.String(novel.UploadedAt),
+			},
+			"UpdateDate": {
+				S: aws.String(novel.UpdatedAt),
 			},
 		},
 		TableName: aws.String(tableName),
