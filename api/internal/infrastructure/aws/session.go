@@ -16,17 +16,6 @@ var (
 	initErr  error
 )
 
-/* Get existing aws session or create new one */
-func GetAWSSession() (*session.Session, error) {
-	once.Do(func() {
-		instance, initErr = NewAWSSession()
-		if initErr != nil {
-			log.Fatalf("Error creating aws session: %v", initErr)
-		}
-	})
-	return instance, initErr
-}
-
 /* Create a new session to interact with aws services */
 func NewAWSSession() (*session.Session, error) {
 	AWSKeys, err := config.GetAWSKeys()
@@ -40,4 +29,15 @@ func NewAWSSession() (*session.Session, error) {
 	})
 
 	return sess, err
+}
+
+/* Get existing aws session or create new one */
+func GetAWSSession() (*session.Session, error) {
+	once.Do(func() {
+		instance, initErr = NewAWSSession()
+		if initErr != nil {
+			log.Fatalf("Error creating aws session: %v", initErr)
+		}
+	})
+	return instance, initErr
 }
