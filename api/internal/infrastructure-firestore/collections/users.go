@@ -30,15 +30,14 @@ func (c *Client) getUserByEmail(email string, ctx context.Context) (*domain.User
 	return nil, errors.New("User not found")
 }
 
-func (c *Client) getUserById(id string, ctx context.Context) (*domain.User, error) {
-	doc, err := c.Client.Collection("users").Doc(id).Get(ctx)
+func (c *Client) getUserById(userId string, ctx context.Context) (*domain.User, error) {
+	doc, err := c.Client.Collection("users").Doc(userId).Get(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var user domain.User
-	err = doc.DataTo(&user)
-	if err != nil {
+	user := domain.User{}
+	if err = doc.DataTo(&user); err != nil {
 		return nil, err
 	}
 
@@ -51,7 +50,7 @@ func (c *Client) getAllUsers(ctx context.Context) (*[]domain.User, error) {
 		return nil, err
 	}
 
-	var users []domain.User
+	users := []domain.User{}
 	for _, d := range doc {
 		var user domain.User
 		err = d.DataTo(&user)
