@@ -63,3 +63,12 @@ func (c *Client) getAllUsers(ctx context.Context) (*[]domain.User, error) {
 
 	return &users, nil
 }
+
+func (c *Client) updateUser(user domain.User, ctx context.Context) error {
+	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
