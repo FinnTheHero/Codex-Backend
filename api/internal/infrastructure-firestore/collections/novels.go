@@ -11,7 +11,7 @@ type Client struct {
 	*firestore.Client
 }
 
-func (c *Client) createNovel(novel domain.Novel, ctx context.Context) error {
+func (c *Client) CreateNovel(novel domain.Novel, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, novel)
 	if err != nil {
 		return err
@@ -20,21 +20,21 @@ func (c *Client) createNovel(novel domain.Novel, ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) getNovelById(id string, ctx context.Context) (domain.Novel, error) {
+func (c *Client) GetNovelById(id string, ctx context.Context) (*domain.Novel, error) {
 	doc, err := c.Client.Collection("novels").Doc(id).Get(ctx)
 	if err != nil {
-		return domain.Novel{}, err
+		return nil, err
 	}
 
 	novel := domain.Novel{}
 	if err := doc.DataTo(&novel); err != nil {
-		return domain.Novel{}, err
+		return nil, err
 	}
 
-	return novel, nil
+	return &novel, nil
 }
 
-func (c *Client) getAllNovels(ctx context.Context) (*[]domain.Novel, error) {
+func (c *Client) GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 	doc, err := c.Client.Collection("novels").Documents(ctx).GetAll()
 	if err != nil {
 		return nil, err
@@ -52,8 +52,8 @@ func (c *Client) getAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 	return &novels, nil
 }
 
-func (c *Client) updateNovel(novel domain.Novel, ctx context.Context) error {
-	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, novel)
+func (c *Client) UpdateNovel(novel domain.Novel, ctx context.Context) error {
+	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, novel) // TODO: Update to use Update instead of Set
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (c *Client) updateNovel(novel domain.Novel, ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) deleteNovel(novelId string, ctx context.Context) error {
+func (c *Client) DeleteNovel(novelId string, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Delete(ctx)
 	if err != nil {
 		return err
