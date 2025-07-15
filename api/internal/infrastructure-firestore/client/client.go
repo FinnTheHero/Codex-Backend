@@ -17,5 +17,11 @@ func NewFirestoreClient(ctx context.Context) (*firestore.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return firestore.NewClient(ctx, "YOUR_PROJECT_ID", option.WithCredentialsJSON([]byte(creds)))
+
+	projectID, err := config.GetEnvVariable("PROJECT_ID")
+	if err != nil {
+		return nil, err
+	}
+
+	return firestore.NewClient(ctx, projectID, option.WithCredentialsJSON([]byte(creds)))
 }
