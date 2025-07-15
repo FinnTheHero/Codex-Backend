@@ -51,3 +51,21 @@ func (c *Client) getAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 
 	return &novels, nil
 }
+
+func (c *Client) updateNovel(novel domain.Novel, ctx context.Context) error {
+	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, novel)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) deleteNovel(novelId string, ctx context.Context) error {
+	_, err := c.Client.Collection("novels").Doc(novelId).Delete(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
