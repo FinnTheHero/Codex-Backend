@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-func (c *Client) createUser(user domain.User, ctx context.Context) error {
+func (c *Client) CreateUser(user domain.User, ctx context.Context) error {
 	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, user)
 	if err != nil {
 		return err
@@ -15,8 +15,8 @@ func (c *Client) createUser(user domain.User, ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) getUserByEmail(email string, ctx context.Context) (*domain.User, error) {
-	users, err := c.getAllUsers(ctx)
+func (c *Client) GetUserByEmail(email string, ctx context.Context) (*domain.User, error) {
+	users, err := c.GetAllUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (c *Client) getUserByEmail(email string, ctx context.Context) (*domain.User
 	return nil, errors.New("User not found")
 }
 
-func (c *Client) getUserById(userId string, ctx context.Context) (*domain.User, error) {
+func (c *Client) GetUserById(userId string, ctx context.Context) (*domain.User, error) {
 	doc, err := c.Client.Collection("users").Doc(userId).Get(ctx)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (c *Client) getUserById(userId string, ctx context.Context) (*domain.User, 
 	return &user, nil
 }
 
-func (c *Client) getAllUsers(ctx context.Context) (*[]domain.User, error) {
+func (c *Client) GetAllUsers(ctx context.Context) (*[]domain.User, error) {
 	doc, err := c.Client.Collection("users").Documents(ctx).GetAll()
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (c *Client) getAllUsers(ctx context.Context) (*[]domain.User, error) {
 	return &users, nil
 }
 
-func (c *Client) updateUser(user domain.User, ctx context.Context) error {
+func (c *Client) UpdateUser(user domain.User, ctx context.Context) error {
 	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, user)
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func (c *Client) updateUser(user domain.User, ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) deleteUser(id string, ctx context.Context) error {
+func (c *Client) DeleteUser(id string, ctx context.Context) error {
 	_, err := c.Client.Collection("users").Doc(id).Delete(ctx)
 	if err != nil {
 		return err
