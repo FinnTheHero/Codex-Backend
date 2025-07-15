@@ -1,4 +1,4 @@
-package firestore_session
+package firestore_client
 
 import (
 	"Codex-Backend/api/internal/config"
