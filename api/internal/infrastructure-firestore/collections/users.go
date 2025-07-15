@@ -72,3 +72,12 @@ func (c *Client) updateUser(user domain.User, ctx context.Context) error {
 
 	return nil
 }
+
+func (c *Client) deleteUser(id string, ctx context.Context) error {
+	_, err := c.Client.Collection("users").Doc(id).Delete(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
