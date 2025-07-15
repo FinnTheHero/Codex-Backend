@@ -5,7 +5,7 @@ import (
 	"context"
 )
 
-func (c *Client) createChapterInNovel(novelId string, chapter domain.Chapter, ctx context.Context) error {
+func (c *Client) CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter)
 	if err != nil {
 		return err
@@ -14,21 +14,21 @@ func (c *Client) createChapterInNovel(novelId string, chapter domain.Chapter, ct
 	return nil
 }
 
-func (c *Client) getChapterByIdFromNovel(novelId string, chapterId string, ctx context.Context) (domain.Chapter, error) {
+func (c *Client) GetChapterById(novelId string, chapterId string, ctx context.Context) (*domain.Chapter, error) {
 	doc, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapterId).Get(ctx)
 	if err != nil {
-		return domain.Chapter{}, err
+		return nil, err
 	}
 
 	chapter := domain.Chapter{}
 	if err = doc.DataTo(&chapter); err != nil {
-		return domain.Chapter{}, err
+		return nil, err
 	}
 
-	return chapter, nil
+	return &chapter, nil
 }
 
-func (c *Client) getAllChaptersFromNovel(novelId string, ctx context.Context) (*[]domain.Chapter, error) {
+func (c *Client) GetAllChapters(novelId string, ctx context.Context) (*[]domain.Chapter, error) {
 	doc, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Documents(ctx).GetAll()
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (c *Client) getAllChaptersFromNovel(novelId string, ctx context.Context) (*
 	return &chapters, nil
 }
 
-func (c *Client) updateChapterFromNovel(novelId string, chapter domain.Chapter, ctx context.Context) error {
+func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func (c *Client) updateChapterFromNovel(novelId string, chapter domain.Chapter, 
 	return nil
 }
 
-func (c *Client) deleteChapterFromNovel(novelId string, chapterId string, ctx context.Context) error {
+func (c *Client) DeleteChapter(novelId string, chapterId string, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapterId).Delete(ctx)
 	if err != nil {
 		return err
