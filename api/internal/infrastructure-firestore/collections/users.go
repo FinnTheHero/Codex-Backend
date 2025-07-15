@@ -49,3 +49,22 @@ func (c *Client) getUserById(id string, ctx context.Context) (*domain.User, erro
 
 	return &user, nil
 }
+
+func (c *Client) getAllUsers(ctx context.Context) (*[]domain.User, error) {
+	doc, err := c.Client.Collection("users").Documents(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var users []domain.User
+	for _, d := range doc {
+		var user domain.User
+		err = d.DataTo(&user)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return &users, nil
+}
