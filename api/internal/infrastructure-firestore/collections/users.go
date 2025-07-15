@@ -16,18 +16,13 @@ func (c *Client) createUser(user domain.User, ctx context.Context) error {
 }
 
 func (c *Client) getUserByEmail(email string, ctx context.Context) (*domain.User, error) {
-	doc, err := c.Client.Collection("users").Documents(ctx).GetAll()
+	users, err := c.getAllUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	var user domain.User
-	for _, d := range doc {
-		if d.Data()["email"] == email {
-			err = d.DataTo(&user)
-			if err != nil {
-				return nil, err
-			}
+	for _, user := range *users {
+		if user.Email == email {
 			return &user, nil
 		}
 	}
