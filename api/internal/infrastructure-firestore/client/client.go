@@ -1,10 +1,13 @@
 package firestore_client
 
 import (
-	"Codex-Backend/api/internal/config"
+	cmn "Codex-Backend/api/internal/common"
 	"context"
+	"errors"
+	"net/http"
 
 	"cloud.google.com/go/firestore"
+	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
 )
 
@@ -12,16 +15,21 @@ type Client struct {
 	*firestore.Client
 }
 
-func NewFirestoreClient(ctx context.Context) (*firestore.Client, error) {
-	creds, err := config.GetEnvVariable("FIRESTORE_JSON")
+func FirestoreClient() (*firestore.Client, error) {
+	ctx := context.Background()
+	defer ctx.Done()
+
+	sa := option.WithCredentialsFile("./firestore.json")
+
+	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Firebase App: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
-	projectID, err := config.GetEnvVariable("PROJECT_ID")
+	client, err := app.Firestore(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Firestore Client: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
-	return firestore.NewClient(ctx, projectID, option.WithCredentialsJSON([]byte(creds)))
+	return client, nil
 }
