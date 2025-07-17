@@ -1,7 +1,7 @@
 package auth_service
 
 import (
-	"Codex-Backend/api/internal/config"
+	"Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	"time"
 
@@ -10,7 +10,7 @@ import (
 
 func GenerateToken(email string) (string, error) {
 
-	key, err := config.GetEnvVariable("JWT_SIGN_KEY")
+	key, err := common.GetEnvVariable("JWT_SIGN_KEY")
 	if err != nil {
 		return "", err
 	}

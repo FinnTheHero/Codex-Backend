@@ -1,19 +1,19 @@
 package firestore_services
 
 import (
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
 	firestore_collections "Codex-Backend/api/internal/infrastructure-firestore/collections"
 	auth_service "Codex-Backend/api/internal/usecases/auth"
 	"context"
+	"errors"
+	"net/http"
 	"time"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func CreateNovel(novel domain.Novel, ctx context.Context) error {
-	client, err := firestore_client.NewFirestoreClient(ctx)
+	client, err := firestore_client.FirestoreClient()
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 	}
 
 	if n != nil {
-		return status.Errorf(codes.AlreadyExists, "Novel with ID %s already exists", id)
+		return &cmn.Error{Err: errors.New("Novel Service Error - Create Novel - Novel with ID " + id + " already exists"), Status: http.StatusConflict}
 	}
 
 	novel.ID = id
@@ -49,7 +49,7 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 }
 
 func GetNovel(id string, ctx context.Context) (*domain.Novel, error) {
-	client, err := firestore_client.NewFirestoreClient(ctx)
+	client, err := firestore_client.FirestoreClient()
 	if err != nil {
 		return nil, err
 	}
@@ -63,14 +63,14 @@ func GetNovel(id string, ctx context.Context) (*domain.Novel, error) {
 	}
 
 	if novel == nil {
-		return nil, status.Errorf(codes.NotFound, "Novel with ID %s not found", id)
+		return nil, &cmn.Error{Err: errors.New("Novel Service Error - Get Novel - Novel with ID " + id + " not found"), Status: http.StatusNotFound}
 	}
 
 	return novel, nil
 }
 
 func GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
-	client, err := firestore_client.NewFirestoreClient(ctx)
+	client, err := firestore_client.FirestoreClient()
 	if err != nil {
 		return nil, err
 	}
@@ -81,6 +81,10 @@ func GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 	novels, err := c.GetAllNovels(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	if novels == nil {
+		return nil, &cmn.Error{Err: errors.New("Novel Service Error - Get All Novels - No novels found"), Status: http.StatusNotFound}
 	}
 
 	return novels, nil

@@ -1,10 +1,13 @@
 package firestore_services
 
 import (
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
 	firestore_collections "Codex-Backend/api/internal/infrastructure-firestore/collections"
 	"context"
+	"errors"
+	"net/http"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -12,7 +15,7 @@ import (
 )
 
 func RegisterUser(newUser domain.NewUser, ctx context.Context) error {
-	client, err := firestore_client.NewFirestoreClient(ctx)
+	client, err := firestore_client.FirestoreClient()
 	if err != nil {
 		return err
 	}
@@ -20,23 +23,23 @@ func RegisterUser(newUser domain.NewUser, ctx context.Context) error {
 
 	c := firestore_collections.Client{Client: client}
 
-	u, err := c.GetUserByEmail(newUser.Email, ctx)
-	if err != nil {
-		return status.Errorf(codes.Internal, "Error searching for user with email: %v", err)
+	user, err := c.GetUserByEmail(newUser.Email, ctx)
+	if err != nil && status.Code(err) != codes.NotFound {
+		return &cmn.Error{Err: errors.New("Register Service Error - Getting User By Email: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
-	if u != nil {
-		return status.Errorf(codes.AlreadyExists, "User with email %s already exists", newUser.Email)
+	if user != nil {
+		return &cmn.Error{Err: errors.New("Register Service Error - User With Email " + newUser.Email + " Already Exists"), Status: http.StatusConflict}
 	}
 
 	id, err := GenerateID("user")
 	if err != nil {
-		return status.Errorf(codes.Internal, "Error generating ID: %v", err)
+		return err
 	}
 
 	hashedPassword, err := HashPassword(newUser.Password)
 	if err != nil {
-		return status.Errorf(codes.Internal, "Error hashing password: %v", err)
+		return err
 	}
 
 	err = c.CreateUser(domain.User{

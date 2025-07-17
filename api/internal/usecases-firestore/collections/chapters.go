@@ -1,19 +1,19 @@
 package firestore_services
 
 import (
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
 	firestore_collections "Codex-Backend/api/internal/infrastructure-firestore/collections"
 	auth_service "Codex-Backend/api/internal/usecases/auth"
 	"context"
+	"errors"
+	"net/http"
 	"time"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
-	client, err := firestore_client.NewFirestoreClient(ctx)
+	client, err := firestore_client.FirestoreClient()
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) 
 	}
 
 	if ch != nil {
-		return status.Errorf(codes.AlreadyExists, "Chapter with ID %s in Novel with id %s already exists", id, novelId)
+		return &cmn.Error{Err: errors.New("Novel Service Error - Create Chapter - Chapter With ID " + id + " In Novel With ID " + novelId + " Already Exists"), Status: http.StatusConflict}
 	}
 
 	chapter.ID = id
@@ -49,7 +49,7 @@ func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) 
 }
 
 func GetChapter(novelId, chapterId string, ctx context.Context) (*domain.Chapter, error) {
-	client, err := firestore_client.NewFirestoreClient(ctx)
+	client, err := firestore_client.FirestoreClient()
 	if err != nil {
 		return nil, err
 	}
@@ -63,14 +63,14 @@ func GetChapter(novelId, chapterId string, ctx context.Context) (*domain.Chapter
 	}
 
 	if chapter == nil {
-		return nil, status.Errorf(codes.NotFound, "Chapter with ID %s in Novel with id %s not found", chapterId, novelId)
+		return nil, &cmn.Error{Err: errors.New("Chapter Service Error - Get Chapter - Chapter With ID " + chapterId + " In Novel With ID " + novelId + " Not Found"), Status: http.StatusNotFound}
 	}
 
 	return chapter, nil
 }
 
 func GetAllChapters(novelId string, ctx context.Context) (*[]domain.Chapter, error) {
-	client, err := firestore_client.NewFirestoreClient(ctx)
+	client, err := firestore_client.FirestoreClient()
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func GetAllChapters(novelId string, ctx context.Context) (*[]domain.Chapter, err
 	}
 
 	if chapters == nil {
-		return nil, status.Errorf(codes.NotFound, "Chapters in Novel with id %s not found", novelId)
+		return nil, &cmn.Error{Err: errors.New("Chapter Service Error - Get All Chapters - Chapters In Novel With ID " + novelId + " Not Found"), Status: http.StatusNotFound}
 	}
 
 	return chapters, nil

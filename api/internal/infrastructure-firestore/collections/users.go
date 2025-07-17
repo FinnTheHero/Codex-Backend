@@ -1,15 +1,17 @@
 package firestore_collections
 
 import (
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	"context"
 	"errors"
+	"net/http"
 )
 
 func (c *Client) CreateUser(user domain.User, ctx context.Context) error {
 	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, user)
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Creating User: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
@@ -27,18 +29,18 @@ func (c *Client) GetUserByEmail(email string, ctx context.Context) (*domain.User
 		}
 	}
 
-	return nil, errors.New("User not found")
+	return nil, &cmn.Error{Err: errors.New("User not found"), Status: http.StatusNotFound}
 }
 
 func (c *Client) GetUserById(userId string, ctx context.Context) (*domain.User, error) {
 	doc, err := c.Client.Collection("users").Doc(userId).Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Getting User by ID: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	user := domain.User{}
 	if err = doc.DataTo(&user); err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Getting User by ID: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return &user, nil
@@ -47,7 +49,7 @@ func (c *Client) GetUserById(userId string, ctx context.Context) (*domain.User, 
 func (c *Client) GetAllUsers(ctx context.Context) (*[]domain.User, error) {
 	doc, err := c.Client.Collection("users").Documents(ctx).GetAll()
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Getting All Users: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	users := []domain.User{}
@@ -55,7 +57,7 @@ func (c *Client) GetAllUsers(ctx context.Context) (*[]domain.User, error) {
 		var user domain.User
 		err = d.DataTo(&user)
 		if err != nil {
-			return nil, err
+			return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Getting All Users: " + err.Error()), Status: http.StatusInternalServerError}
 		}
 		users = append(users, user)
 	}
@@ -66,7 +68,7 @@ func (c *Client) GetAllUsers(ctx context.Context) (*[]domain.User, error) {
 func (c *Client) UpdateUser(user domain.User, ctx context.Context) error {
 	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, user)
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Updating User: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
@@ -75,7 +77,7 @@ func (c *Client) UpdateUser(user domain.User, ctx context.Context) error {
 func (c *Client) DeleteUser(id string, ctx context.Context) error {
 	_, err := c.Client.Collection("users").Doc(id).Delete(ctx)
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Deleting User: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil

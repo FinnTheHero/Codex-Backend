@@ -1,8 +1,11 @@
 package firestore_collections
 
 import (
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	"context"
+	"errors"
+	"net/http"
 
 	"cloud.google.com/go/firestore"
 )
@@ -14,7 +17,7 @@ type Client struct {
 func (c *Client) CreateNovel(novel domain.Novel, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, novel)
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Create Novel: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
@@ -23,12 +26,12 @@ func (c *Client) CreateNovel(novel domain.Novel, ctx context.Context) error {
 func (c *Client) GetNovelById(id string, ctx context.Context) (*domain.Novel, error) {
 	doc, err := c.Client.Collection("novels").Doc(id).Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by ID: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	novel := domain.Novel{}
 	if err := doc.DataTo(&novel); err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by ID: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return &novel, nil
@@ -37,14 +40,14 @@ func (c *Client) GetNovelById(id string, ctx context.Context) (*domain.Novel, er
 func (c *Client) GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 	doc, err := c.Client.Collection("novels").Documents(ctx).GetAll()
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get All Novels: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	novels := []domain.Novel{}
 	for _, d := range doc {
 		novel := domain.Novel{}
 		if err := d.DataTo(&novel); err != nil {
-			return nil, err
+			return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get All Novels: " + err.Error()), Status: http.StatusInternalServerError}
 		}
 		novels = append(novels, novel)
 	}
@@ -55,7 +58,7 @@ func (c *Client) GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 func (c *Client) UpdateNovel(novel domain.Novel, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, novel) // TODO: Update to use Update instead of Set
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Update Novel: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
@@ -64,7 +67,7 @@ func (c *Client) UpdateNovel(novel domain.Novel, ctx context.Context) error {
 func (c *Client) DeleteNovel(novelId string, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Delete(ctx)
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Delete Novel: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
