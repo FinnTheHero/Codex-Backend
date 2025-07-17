@@ -1,14 +1,17 @@
 package firestore_collections
 
 import (
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	"context"
+	"errors"
+	"net/http"
 )
 
 func (c *Client) CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter)
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Create Chapter: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
@@ -17,12 +20,12 @@ func (c *Client) CreateChapter(novelId string, chapter domain.Chapter, ctx conte
 func (c *Client) GetChapterById(novelId string, chapterId string, ctx context.Context) (*domain.Chapter, error) {
 	doc, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapterId).Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Chapter By Id: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	chapter := domain.Chapter{}
 	if err = doc.DataTo(&chapter); err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Chapter By Id: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return &chapter, nil
@@ -31,14 +34,14 @@ func (c *Client) GetChapterById(novelId string, chapterId string, ctx context.Co
 func (c *Client) GetAllChapters(novelId string, ctx context.Context) (*[]domain.Chapter, error) {
 	doc, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Documents(ctx).GetAll()
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get All Chapters: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	chapters := []domain.Chapter{}
 	for _, d := range doc {
 		chapter := domain.Chapter{}
 		if err = d.DataTo(&chapter); err != nil {
-			return nil, err
+			return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get All Chapters: " + err.Error()), Status: http.StatusInternalServerError}
 		}
 		chapters = append(chapters, chapter)
 	}
@@ -49,7 +52,7 @@ func (c *Client) GetAllChapters(novelId string, ctx context.Context) (*[]domain.
 func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter)
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Update Chapter: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
@@ -58,7 +61,7 @@ func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx conte
 func (c *Client) DeleteChapter(novelId string, chapterId string, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapterId).Delete(ctx)
 	if err != nil {
-		return err
+		return &cmn.Error{Err: errors.New("Firestore Client Error - Delete Chapter: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
