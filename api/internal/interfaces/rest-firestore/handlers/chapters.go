@@ -53,28 +53,30 @@ func FindAllChapters(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	result_n, ok := c.Get("novel")
-	if !ok {
+	novelId := n_id{}
+
+	if err := c.ShouldBindJSON(&novelId); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Novel ID not present in request",
 		})
 		return
 	}
 
-	novelId, ok := result_n.(string)
-	if !ok {
+	if novelId.Novel == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID is not a string",
+			"error": "Novel ID is empty",
 		})
 		return
 	}
 
-	chapters, err := firestore_services.GetAllChapters(novelId, ctx)
+	chapters, err := firestore_services.GetAllChapters(novelId.Novel, ctx)
 	if e, ok := err.(*common.Error); ok {
-		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
-			"error": "Failed to retrieve chapters: " + e.Error(),
-		})
-		return
+		if e.StatusCode() == 404 {
+			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+				"error": "Failed to retrieve chapters: " + e.Error(),
+			})
+			return
+		}
 	} else if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve chapters: " + err.Error(),
