@@ -1,6 +1,7 @@
 package firestore_services
 
 import (
+	"Codex-Backend/api/internal/common"
 	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
@@ -58,8 +59,10 @@ func GetChapter(novelId, chapterId string, ctx context.Context) (*domain.Chapter
 	c := firestore_collections.Client{Client: client}
 
 	chapter, err := c.GetChapterById(novelId, chapterId, ctx)
-	if err != nil {
-		return nil, err
+	if e, ok := err.(*common.Error); !ok {
+		if e.StatusCode() != 404 {
+			return nil, err
+		}
 	}
 
 	if chapter == nil {
