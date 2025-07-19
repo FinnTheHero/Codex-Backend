@@ -9,43 +9,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type nc_ids struct {
+	Novel   string `json:"novel"`
+	Chapter string `json:"chapter"`
+}
+
+type n_id struct {
+	Novel string `json:"novel"`
+}
+
 func FindChapter(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	result_n, ok := c.Get("novel")
-	if !ok {
+	ids := nc_ids{}
+
+	if err := c.ShouldBindJSON(&ids); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID not present in request",
+			"error": "IDs are not present in request",
 		})
 		return
 	}
 
-	novelId, ok := result_n.(string)
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID is not a string",
-		})
-		return
-	}
-
-	result_c, ok := c.Get("chapter")
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Chapter ID not present in request",
-		})
-		return
-	}
-
-	chapterId, ok := result_c.(string)
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Chapter ID is not a string",
-		})
-		return
-	}
-
-	chapter, err := firestore_services.GetChapter(novelId, chapterId, ctx)
+	chapter, err := firestore_services.GetChapter(ids.Novel, ids.Chapter, ctx)
 	if e, ok := err.(*common.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapter: " + e.Error(),
