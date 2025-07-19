@@ -93,21 +93,7 @@ func CreateChapter(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	result_n, ok := c.Get("novel")
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID not present in request",
-		})
-		return
-	}
-
-	novelId, ok := result_n.(string)
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID is not a string",
-		})
-		return
-	}
+	novelId := c.Param("novel")
 
 	chapter := domain.Chapter{}
 
