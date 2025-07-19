@@ -34,7 +34,7 @@ func (c *Client) GetNovelById(id string, ctx context.Context) (*domain.Novel, er
 	novel := domain.Novel{}
 	if err := doc.DataTo(&novel); err != nil {
 		if status.Convert(err).Code() == codes.NotFound {
-			return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by ID: Document not found"), Status: http.StatusNotFound}
+			return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by ID - Novel not found"), Status: http.StatusNotFound}
 		}
 		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by ID: " + err.Error()), Status: http.StatusInternalServerError}
 	}
