@@ -9,7 +9,7 @@ import (
 
 func IsAdmin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var user domain.User
+		var user *domain.User
 
 		// Get user from context
 		result, ok := c.Get("user")
@@ -21,8 +21,15 @@ func IsAdmin() gin.HandlerFunc {
 		}
 
 		// Cast user to User struct
-		user, ok = result.(domain.User)
-		if !ok || user.Type != "admin" {
+		user, ok = result.(*domain.User)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "Incorrect User struct",
+			})
+			return
+		}
+
+		if user.Type != "Admin" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "Unauthorized access",
 			})
