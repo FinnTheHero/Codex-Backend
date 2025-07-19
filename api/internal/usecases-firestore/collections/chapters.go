@@ -88,7 +88,7 @@ func GetAllChapters(novelId string, ctx context.Context) (*[]domain.Chapter, err
 		return nil, err
 	}
 
-	if chapters == nil {
+	if len(*chapters) == 0 {
 		return nil, &cmn.Error{Err: errors.New("Chapter Service Error - Get All Chapters - Chapters In Novel With ID " + novelId + " Not Found"), Status: http.StatusNotFound}
 	}
 
