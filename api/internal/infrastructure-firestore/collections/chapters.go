@@ -6,6 +6,9 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (c *Client) CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
@@ -25,6 +28,9 @@ func (c *Client) GetChapterById(novelId string, chapterId string, ctx context.Co
 
 	chapter := domain.Chapter{}
 	if err = doc.DataTo(&chapter); err != nil {
+		if status.Convert(err).Code() == codes.NotFound {
+			return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Chapter By Id - Chapter Not Found"), Status: http.StatusNotFound}
+		}
 		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Chapter By Id: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
