@@ -28,8 +28,10 @@ func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) 
 	}
 
 	ch, err := c.GetChapterById(novelId, id, ctx)
-	if err != nil {
-		return err
+	if e, ok := err.(*common.Error); !ok {
+		if e.StatusCode() != 404 {
+			return err
+		}
 	}
 
 	if ch != nil {
