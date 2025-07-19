@@ -83,7 +83,7 @@ func GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 		return nil, err
 	}
 
-	if novels == nil {
+	if len(*novels) == 0 {
 		return nil, &cmn.Error{Err: errors.New("Novel Service Error - Get All Novels - No novels found"), Status: http.StatusNotFound}
 	}
 
