@@ -1,6 +1,7 @@
 package firestore_services
 
 import (
+	"Codex-Backend/api/internal/common"
 	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
@@ -27,8 +28,10 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 	}
 
 	n, err := c.GetNovelById(id, ctx)
-	if err != nil {
-		return err
+	if e, ok := err.(*common.Error); !ok {
+		if e.StatusCode() != 404 {
+			return err
+		}
 	}
 
 	if n != nil {
