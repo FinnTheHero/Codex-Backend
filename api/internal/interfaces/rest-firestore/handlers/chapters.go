@@ -105,7 +105,12 @@ func CreateChapter(c *gin.Context) {
 	}
 
 	err := firestore_services.CreateChapter(novelId, chapter, ctx)
-	if err != nil {
+	if e, ok := err.(*common.Error); !ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to create chapter: " + e.Error(),
+		})
+		return
+	} else if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to create chapter: " + err.Error(),
 		})
