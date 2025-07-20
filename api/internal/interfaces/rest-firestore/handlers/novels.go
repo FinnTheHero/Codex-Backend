@@ -13,16 +13,8 @@ func FindNovel(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	result, ok := c.Get("novel")
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID not found",
-		})
-		return
-	}
-
-	novelId, ok := result.(string)
-	if !ok {
+	novelId := c.Param("novel")
+	if novelId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Novel ID not found",
 		})
