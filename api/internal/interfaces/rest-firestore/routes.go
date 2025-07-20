@@ -42,27 +42,24 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	client := r.Group("/")
 	{
-		client.Use(middleware.VerifyUsersTablesExist())
 		client.GET("/all", firestore_handlers.FindAllNovels)
 		client.GET("/:novel", firestore_handlers.FindNovel)
 		client.GET("/:novel/all", firestore_handlers.FindAllChapters)
 		client.GET("/:novel/:chapter", firestore_handlers.FindChapter)
-		// client.GET("/:novel/:chapter/next-previous", handlers.FindPreviousAndNextChapters)
+		// client.GET("/:novel/:chapter/next-previous", handlers.FindPreviousAndNextChapters) // Will Probably remove this entierly later
 	}
 
-	admin := r.Group("/admin")
+	manage := r.Group("/manage")
 	{
-		admin.Use(firestore_middleware.ValidateToken())
-		admin.Use(firestore_middleware.IsAdmin())
-		admin.POST("/novel", firestore_handlers.CreateNovel)
-		admin.POST("/:novel/chapter", firestore_handlers.CreateChapter)
+		manage.POST("/novel", firestore_middleware.ValidateToken(), firestore_middleware.IsAdmin(), firestore_handlers.CreateNovel)
+		manage.POST("/:novel/chapter", firestore_middleware.ValidateToken(), firestore_middleware.IsAdmin(), firestore_handlers.CreateChapter)
 	}
 
-	auth := r.Group("/auth")
+	user := r.Group("/user")
 	{
-		auth.GET("/validate", firestore_middleware.ValidateToken(), firestore_handlers.ValidateToken)
-		auth.POST("/login", firestore_handlers.LoginUser)
-		auth.POST("/logout", firestore_handlers.LogoutUser)
-		auth.POST("/register", firestore_handlers.RegisterUser)
+		user.GET("/validate", firestore_middleware.ValidateToken(), firestore_handlers.ValidateToken)
+		user.POST("/login", firestore_handlers.LoginUser)
+		user.POST("/logout", firestore_handlers.LogoutUser)
+		user.POST("/register", firestore_handlers.RegisterUser)
 	}
 }
