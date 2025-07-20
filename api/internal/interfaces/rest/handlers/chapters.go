@@ -97,7 +97,7 @@ func CreateChapter(c *gin.Context) {
 	}
 
 	err := firestore_services.CreateChapter(novelId, chapter, ctx)
-	if e, ok := err.(*common.Error); !ok {
+	if e, ok := err.(*common.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to create chapter: " + e.Error(),
 		})
@@ -130,7 +130,7 @@ func UpdateChapter(c *gin.Context) {
 	}
 
 	err := firestore_services.UpdateChapter(novelId, &chapter, ctx)
-	if e, ok := err.(*common.Error); !ok {
+	if e, ok := err.(*common.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to update chapter: " + e.Error(),
 		})
@@ -155,7 +155,7 @@ func DeleteChapter(c *gin.Context) {
 	chapterId := c.Param("chapter")
 
 	err := firestore_services.DeleteChapter(novelId, chapterId, ctx)
-	if e, ok := err.(*common.Error); !ok {
+	if e, ok := err.(*common.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to delete chapter: " + e.Error(),
 		})
