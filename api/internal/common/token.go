@@ -1,8 +1,6 @@
-package firestore_services
+package common
 
 import (
-	"Codex-Backend/api/internal/common"
-	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	"errors"
 	"time"
@@ -12,7 +10,7 @@ import (
 
 func GenerateToken(email string) (string, error) {
 
-	key, err := common.GetEnvVariable("JWT_SIGN_KEY")
+	key, err := GetEnvVariable("JWT_SIGN_KEY")
 	if err != nil {
 		return "", err
 	}
@@ -32,7 +30,7 @@ func GenerateToken(email string) (string, error) {
 
 	tokenString, err := token.SignedString(signKey)
 	if err != nil {
-		return "", &cmn.Error{Err: errors.New("Token Service Error - Generate Token String: " + err.Error())}
+		return "", &Error{Err: errors.New("Token Service Error - Generate Token String: " + err.Error())}
 	}
 
 	return tokenString, nil

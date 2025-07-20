@@ -1,7 +1,6 @@
-package firestore_services
+package common
 
 import (
-	cmn "Codex-Backend/api/internal/common"
 	"errors"
 	"net/http"
 
@@ -11,7 +10,7 @@ import (
 func HashPassword(password string) ([]byte, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
-		return nil, &cmn.Error{Err: errors.New("Password Service Error - Hash Password: " + err.Error()), Status: http.StatusInternalServerError}
+		return nil, &Error{Err: errors.New("Password Service Error - Hash Password: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 	return hash, nil
 }
@@ -19,7 +18,7 @@ func HashPassword(password string) ([]byte, error) {
 func VerifyPassword(hashedPassword, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
-		return &cmn.Error{Err: errors.New("Password Service Error - Verify Password: " + err.Error()), Status: http.StatusInternalServerError}
+		return &Error{Err: errors.New("Password Service Error - Verify Password: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
 	return nil
