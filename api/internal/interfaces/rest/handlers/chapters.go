@@ -56,7 +56,7 @@ func FindAllChapters(c *gin.Context) {
 
 	chapters, err := firestore_services.GetAllChapters(novelId, ctx)
 	if e, ok := err.(*common.Error); ok {
-		if e.StatusCode() == 404 {
+		if e.StatusCode() == http.StatusNotFound {
 			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 				"error": "Failed to retrieve chapters: " + e.Error(),
 			})
