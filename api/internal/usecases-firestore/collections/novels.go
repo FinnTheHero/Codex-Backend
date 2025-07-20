@@ -48,11 +48,7 @@ func GetNovel(id string, ctx context.Context) (*domain.Novel, error) {
 	c := firestore_collections.Client{Client: client}
 
 	novel, err := c.GetNovelById(id, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != http.StatusNotFound {
-			return nil, err
-		}
-	} else {
+	if err != nil {
 		return nil, err
 	}
 

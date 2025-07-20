@@ -48,11 +48,7 @@ func GetChapter(novelId, chapterId string, ctx context.Context) (*domain.Chapter
 	c := firestore_collections.Client{Client: client}
 
 	chapter, err := c.GetChapterById(novelId, chapterId, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != http.StatusNotFound {
-			return nil, err
-		}
-	} else {
+	if err != nil {
 		return nil, err
 	}
 
