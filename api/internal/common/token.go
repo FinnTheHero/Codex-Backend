@@ -1,8 +1,8 @@
-package auth_service
+package common
 
 import (
-	"Codex-Backend/api/internal/config"
 	"Codex-Backend/api/internal/domain"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -10,7 +10,7 @@ import (
 
 func GenerateToken(email string) (string, error) {
 
-	key, err := config.GetEnvVariable("JWT_SIGN_KEY")
+	key, err := GetEnvVariable("JWT_SIGN_KEY")
 	if err != nil {
 		return "", err
 	}
@@ -30,7 +30,7 @@ func GenerateToken(email string) (string, error) {
 
 	tokenString, err := token.SignedString(signKey)
 	if err != nil {
-		return "", err
+		return "", &Error{Err: errors.New("Token Service Error - Generate Token String: " + err.Error())}
 	}
 
 	return tokenString, nil
