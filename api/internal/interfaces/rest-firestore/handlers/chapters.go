@@ -9,29 +9,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type nc_ids struct {
-	Novel   string `json:"novel"`
-	Chapter string `json:"chapter"`
-}
-
-type n_id struct {
-	Novel string `json:"novel"`
-}
-
 func FindChapter(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	ids := nc_ids{}
+	novelId := c.Param("novel")
+	chapterId := c.Param("chapter")
 
-	if err := c.ShouldBindJSON(&ids); err != nil {
+	if novelId == "" || chapterId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "IDs are not present in request",
 		})
 		return
 	}
 
-	chapter, err := firestore_services.GetChapter(ids.Novel, ids.Chapter, ctx)
+	chapter, err := firestore_services.GetChapter(novelId, chapterId, ctx)
 	if e, ok := err.(*common.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapter: " + e.Error(),
@@ -53,7 +45,7 @@ func FindAllChapters(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novelId := n_id{}
+	novelId := c.Param("novel")
 
 	if err := c.ShouldBindJSON(&novelId); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -62,14 +54,14 @@ func FindAllChapters(c *gin.Context) {
 		return
 	}
 
-	if novelId.Novel == "" {
+	if novelId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Novel ID is empty",
 		})
 		return
 	}
 
-	chapters, err := firestore_services.GetAllChapters(novelId.Novel, ctx)
+	chapters, err := firestore_services.GetAllChapters(novelId, ctx)
 	if e, ok := err.(*common.Error); ok {
 		if e.StatusCode() == 404 {
 			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
