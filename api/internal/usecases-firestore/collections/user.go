@@ -1,11 +1,10 @@
 package firestore_services
 
 import (
-	"Codex-Backend/api/internal/common"
 	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
-	firestore_collections "Codex-Backend/api/internal/infrastructure-firestore/collections"
+	firestore_client "Codex-Backend/api/internal/infrastructure/client"
+	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"context"
 	"errors"
 	"net/http"
@@ -53,7 +52,7 @@ func RegisterUser(newUser domain.NewUser, ctx context.Context) error {
 	c := firestore_collections.Client{Client: client}
 
 	user, err := c.GetUserByEmail(newUser.Email, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		if e.StatusCode() != http.StatusNotFound {
 			return &cmn.Error{Err: errors.New("Register Service Error - Getting User By Email: " + err.Error()), Status: http.StatusInternalServerError}
 		}

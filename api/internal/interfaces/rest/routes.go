@@ -1,8 +1,8 @@
-package server
+package firestore_server
 
 import (
-	"Codex-Backend/api/internal/interfaces/rest/handlers"
-	"Codex-Backend/api/internal/interfaces/rest/middleware"
+	firestore_handlers "Codex-Backend/api/internal/interfaces/rest/handlers"
+	firestore_middleware "Codex-Backend/api/internal/interfaces/rest/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -37,32 +37,28 @@ func RegisteredRoutes(r *gin.Engine) {
 		AllowCredentials: true,
 	}))
 
+	r.Use(firestore_middleware.RateLimiter())
+
 	client := r.Group("/")
 	{
-		client.Use(middleware.RateLimiter)
-		client.Use(middleware.VerifyUsersTablesExist())
-		client.GET("/all", handlers.FindAllNovels)
-		client.GET("/:novel", handlers.FindNovel)
-		client.GET("/:novel/all", handlers.FindAllChapters)
-		client.GET("/:novel/:chapter", handlers.FindChapter)
-		client.GET("/:novel/:chapter/next-previous", handlers.FindPreviousAndNextChapters)
+		client.GET("/all", firestore_handlers.FindAllNovels)
+		client.GET("/:novel", firestore_handlers.FindNovel)
+		client.GET("/:novel/all", firestore_handlers.FindAllChapters)
+		client.GET("/:novel/:chapter", firestore_handlers.FindChapter)
+		// client.GET("/:novel/:chapter/next-previous", handlers.FindPreviousAndNextChapters) // Will Probably remove this entierly later
 	}
 
-	admin := r.Group("/admin")
+	manage := r.Group("/manage")
 	{
-		admin.Use(middleware.RateLimiter)
-		admin.Use(middleware.VerifyNovelsTableExists())
-		admin.POST("/novel", middleware.ValidateToken(), middleware.IsAdmin(), handlers.CreateNovel)
-		admin.POST("/:novel/chapter", middleware.ValidateToken(), middleware.IsAdmin(), handlers.CreateChapter)
+		manage.POST("/novel", firestore_middleware.ValidateToken(), firestore_middleware.IsAdmin(), firestore_handlers.CreateNovel)
+		manage.POST("/:novel/chapter", firestore_middleware.ValidateToken(), firestore_middleware.IsAdmin(), firestore_handlers.CreateChapter)
 	}
 
-	auth := r.Group("/auth")
+	user := r.Group("/user")
 	{
-		auth.Use(middleware.RateLimiter)
-		auth.Use(middleware.VerifyUsersTablesExist())
-		auth.GET("/validate", middleware.ValidateToken(), handlers.ValidateToken)
-		auth.POST("/login", handlers.LoginUser)
-		auth.POST("/logout", handlers.LogoutUser)
-		auth.POST("/register", handlers.RegisterUser)
+		user.GET("/validate", firestore_middleware.ValidateToken(), firestore_handlers.ValidateToken)
+		user.POST("/login", firestore_handlers.LoginUser)
+		user.POST("/logout", firestore_handlers.LogoutUser)
+		user.POST("/register", firestore_handlers.RegisterUser)
 	}
 }

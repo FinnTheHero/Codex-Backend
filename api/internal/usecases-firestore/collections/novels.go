@@ -1,12 +1,10 @@
 package firestore_services
 
 import (
-	"Codex-Backend/api/internal/common"
 	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
-	firestore_collections "Codex-Backend/api/internal/infrastructure-firestore/collections"
-	auth_service "Codex-Backend/api/internal/usecases/auth"
+	firestore_client "Codex-Backend/api/internal/infrastructure/client"
+	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"context"
 	"errors"
 	"net/http"
@@ -22,13 +20,13 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 
 	c := firestore_collections.Client{Client: client}
 
-	id, err := auth_service.GenerateID("novel")
+	id, err := cmn.GenerateID("novel")
 	if err != nil {
 		return err
 	}
 
 	n, err := c.GetNovelById(id, ctx)
-	if e, ok := err.(*common.Error); !ok {
+	if e, ok := err.(*cmn.Error); !ok {
 		if e.StatusCode() != 404 {
 			return err
 		}

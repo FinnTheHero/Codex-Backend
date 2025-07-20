@@ -2,7 +2,7 @@ package main
 
 import (
 	"Codex-Backend/api/internal/common"
-	firestore_server "Codex-Backend/api/internal/interfaces/rest-firestore"
+	firestore_server "Codex-Backend/api/internal/interfaces/rest"
 	"log"
 
 	"github.com/gin-gonic/gin"

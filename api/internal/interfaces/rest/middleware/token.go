@@ -3,8 +3,8 @@ package firestore_middleware
 import (
 	"Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
-	firestore_collections "Codex-Backend/api/internal/infrastructure-firestore/collections"
+	firestore_client "Codex-Backend/api/internal/infrastructure/client"
+	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"net/http"
 	"time"
 

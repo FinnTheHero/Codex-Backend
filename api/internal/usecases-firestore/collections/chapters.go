@@ -1,12 +1,10 @@
 package firestore_services
 
 import (
-	"Codex-Backend/api/internal/common"
 	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_client "Codex-Backend/api/internal/infrastructure-firestore/client"
-	firestore_collections "Codex-Backend/api/internal/infrastructure-firestore/collections"
-	auth_service "Codex-Backend/api/internal/usecases/auth"
+	firestore_client "Codex-Backend/api/internal/infrastructure/client"
+	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"context"
 	"errors"
 	"net/http"
@@ -22,13 +20,13 @@ func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) 
 
 	c := firestore_collections.Client{Client: client}
 
-	id, err := auth_service.GenerateID("chapter")
+	id, err := cmn.GenerateID("chapter")
 	if err != nil {
 		return err
 	}
 
 	ch, err := c.GetChapterById(novelId, id, ctx)
-	if e, ok := err.(*common.Error); !ok {
+	if e, ok := err.(*cmn.Error); !ok {
 		if e.StatusCode() != 404 {
 			return err
 		}
@@ -61,7 +59,7 @@ func GetChapter(novelId, chapterId string, ctx context.Context) (*domain.Chapter
 	c := firestore_collections.Client{Client: client}
 
 	chapter, err := c.GetChapterById(novelId, chapterId, ctx)
-	if e, ok := err.(*common.Error); !ok {
+	if e, ok := err.(*cmn.Error); !ok {
 		if e.StatusCode() != 404 {
 			return nil, err
 		}
