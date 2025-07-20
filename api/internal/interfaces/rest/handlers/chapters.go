@@ -1,9 +1,9 @@
 package firestore_handlers
 
 import (
-	"Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_services "Codex-Backend/api/internal/usecases-firestore/collections"
+	firestore_services "Codex-Backend/api/internal/usecases/collections"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,7 +24,7 @@ func FindChapter(c *gin.Context) {
 	}
 
 	chapter, err := firestore_services.GetChapter(novelId, chapterId, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapter: " + e.Error(),
 		})
@@ -55,7 +55,7 @@ func FindAllChapters(c *gin.Context) {
 	}
 
 	chapters, err := firestore_services.GetAllChapters(novelId, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		if e.StatusCode() == http.StatusNotFound {
 			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 				"error": "Failed to retrieve chapters: " + e.Error(),
@@ -90,7 +90,7 @@ func CreateChapter(c *gin.Context) {
 	}
 
 	err := firestore_services.CreateChapter(novelId, chapter, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to create chapter: " + e.Error(),
 		})
@@ -123,7 +123,7 @@ func UpdateChapter(c *gin.Context) {
 	}
 
 	err := firestore_services.UpdateChapter(novelId, &chapter, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to update chapter: " + e.Error(),
 		})
@@ -148,7 +148,7 @@ func DeleteChapter(c *gin.Context) {
 	chapterId := c.Param("chapter")
 
 	err := firestore_services.DeleteChapter(novelId, chapterId, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to delete chapter: " + e.Error(),
 		})

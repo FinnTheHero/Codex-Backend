@@ -1,9 +1,9 @@
 package firestore_handlers
 
 import (
-	"Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_services "Codex-Backend/api/internal/usecases-firestore/collections"
+	firestore_services "Codex-Backend/api/internal/usecases/collections"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -22,7 +22,7 @@ func FindNovel(c *gin.Context) {
 	}
 
 	novel, err := firestore_services.GetNovel(novelId, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve novel: " + e.Error(),
 		})
@@ -44,7 +44,7 @@ func FindAllNovels(c *gin.Context) {
 	defer ctx.Done()
 
 	novels, err := firestore_services.GetAllNovels(ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve novels: " + e.Error(),
 		})
@@ -75,7 +75,7 @@ func CreateNovel(c *gin.Context) {
 	}
 
 	err := firestore_services.CreateNovel(novel, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to create novel: " + e.Error(),
 		})
@@ -114,7 +114,7 @@ func UpdateNovel(c *gin.Context) {
 	}
 
 	err := firestore_services.UpdateNovel(novelId, novel, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to update novel: " + e.Error(),
 		})
@@ -144,7 +144,7 @@ func DeleteNovel(c *gin.Context) {
 	}
 
 	err := firestore_services.DeleteNovel(novelId, ctx)
-	if e, ok := err.(*common.Error); ok {
+	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to delete novel: " + e.Error(),
 		})
