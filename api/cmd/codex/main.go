@@ -1,8 +1,8 @@
 package main
 
 import (
-	"Codex-Backend/api/internal/config"
-	server "Codex-Backend/api/internal/interfaces/rest"
+	"Codex-Backend/api/internal/common"
+	firestore_server "Codex-Backend/api/internal/interfaces/rest"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -10,7 +10,7 @@ import (
 
 func init() {
 	if gin.Mode() == gin.DebugMode {
-		err := config.LoadEnvVariables()
+		err := common.LoadEnvVariables()
 		if err != nil {
 			log.Fatalf("Error loading env file: %s", err.Error())
 		}
@@ -18,5 +18,5 @@ func init() {
 }
 
 func main() {
-	server.Server()
+	firestore_server.Server()
 }

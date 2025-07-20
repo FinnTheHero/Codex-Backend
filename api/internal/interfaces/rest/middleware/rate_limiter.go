@@ -1,4 +1,4 @@
-package middleware
+package firestore_middleware
 
 import (
 	"net/http"
@@ -9,13 +9,14 @@ import (
 
 var limiter = rate.NewLimiter(1, 30)
 
-func RateLimiter(c *gin.Context) {
-	if !limiter.Allow() {
-		c.JSON(http.StatusTooManyRequests, gin.H{
-			"error": "Too Many Requests!",
-		})
-		c.Abort()
-		return
+func RateLimiter() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !limiter.Allow() {
+			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
+				"error": "Too Many Requests!",
+			})
+			return
+		}
+		c.Next()
 	}
-	c.Next()
 }

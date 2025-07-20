@@ -1,6 +1,7 @@
-package auth_service
+package common
 
 import (
+	"errors"
 	"math/rand"
 	"time"
 
@@ -14,7 +15,7 @@ func GenerateID(prefix string) (string, error) {
 	// Generate a ULID using the current timestamp and the entropy source
 	id, err := ulid.New(ulid.Timestamp(time.Now()), entropy)
 	if err != nil {
-		return "", err
+		return "", &Error{Err: errors.New("Common Services Error - Generate ULID: " + err.Error())}
 	}
 
 	// Add a prefix to the generated ID

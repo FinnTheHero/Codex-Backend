@@ -1,4 +1,4 @@
-package server
+package firestore_server
 
 import (
 	"github.com/gin-gonic/gin"

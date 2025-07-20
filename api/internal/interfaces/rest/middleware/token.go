@@ -1,9 +1,10 @@
-package middleware
+package firestore_middleware
 
 import (
-	"Codex-Backend/api/internal/config"
+	"Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
-	"Codex-Backend/api/internal/infrastructure/repository"
+	firestore_client "Codex-Backend/api/internal/infrastructure/client"
+	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"net/http"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 
 func ValidateToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+
 		tokenString, err := c.Cookie("Authorization")
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -26,7 +29,7 @@ func ValidateToken() gin.HandlerFunc {
 				return nil, jwt.ErrSignatureInvalid
 			}
 
-			key, err := config.GetEnvVariable("JWT_SIGN_KEY")
+			key, err := common.GetEnvVariable("JWT_SIGN_KEY")
 			if err != nil {
 				return nil, err
 			}
@@ -55,17 +58,34 @@ func ValidateToken() gin.HandlerFunc {
 				})
 			}
 
-			// Find user
-			user, err := repository.GetUser(claims.Email)
+			client, err := firestore_client.FirestoreClient()
 			if err != nil {
-				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 					"error": err.Error(),
 				})
 				return
 			}
+			defer client.Close()
 
-			// Check user email
-			if user.Email == "" || user.Email != claims.Email {
+			cl := firestore_collections.Client{Client: client}
+
+			// Find user
+			user, err := cl.GetUserByEmail(claims.Email, ctx)
+			if e, ok := err.(*common.Error); ok {
+				c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+					"error": "Error Verifying Cookie: " + e.Error(),
+				})
+				return
+			}
+
+			if user == nil {
+				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+					"error": "User not found",
+				})
+				return
+			}
+
+			if user.Email != claims.Email {
 				c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
 					"error": "User not found",
 				})
