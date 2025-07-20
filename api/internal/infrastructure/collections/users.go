@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
+	"cloud.google.com/go/firestore"
 )
 
 func (c *Client) CreateUser(user domain.User, ctx context.Context) error {
@@ -66,7 +68,31 @@ func (c *Client) GetAllUsers(ctx context.Context) (*[]domain.User, error) {
 }
 
 func (c *Client) UpdateUser(user domain.User, ctx context.Context) error {
-	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, user) // TODO: Update to use Update instead of Set
+	updates := make(map[string]any)
+
+	if user.Email != "" {
+		updates["Email"] = user.Email
+	}
+
+	if user.Username != "" {
+		updates["Username"] = user.Username
+	}
+
+	if user.Password != "" {
+		updates["Password"] = user.Password
+	}
+
+	if user.Type != "" {
+		updates["Type"] = user.Type
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	updates["UpdatedAt"] = user.UpdatedAt
+
+	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, updates, firestore.MergeAll)
 	if err != nil {
 		return &cmn.Error{Err: errors.New("Firestore Client Error - Updating User: " + err.Error()), Status: http.StatusInternalServerError}
 	}

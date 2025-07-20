@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/grpc/codes"
@@ -61,7 +62,23 @@ func (c *Client) GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 }
 
 func (c *Client) UpdateNovel(novel domain.Novel, ctx context.Context) error {
-	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, novel) // TODO: Update to use Update instead of Set
+	updates := make(map[string]any)
+
+	if novel.Title != "" {
+		updates["Title"] = novel.Title
+	}
+
+	if novel.Description != "" {
+		updates["Description"] = novel.Description
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	updates["UpdatedAt"] = time.Now().Format("2006-01-02 15:04:05")
+
+	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, updates, firestore.MergeAll)
 	if err != nil {
 		return &cmn.Error{Err: errors.New("Firestore Client Error - Update Novel: " + err.Error()), Status: http.StatusInternalServerError}
 	}

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -56,7 +57,27 @@ func (c *Client) GetAllChapters(novelId string, ctx context.Context) (*[]domain.
 }
 
 func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
-	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter) // TODO: Update to use Update instead of Set
+	updates := make(map[string]any)
+
+	if chapter.Title != "" {
+		updates["Title"] = chapter.Title
+	}
+
+	if chapter.Description != "" {
+		updates["Description"] = chapter.Description
+	}
+
+	if chapter.Content != "" {
+		updates["Content"] = chapter.Content
+	}
+
+	if len(updates) == 0 {
+		return nil
+	}
+
+	updates["updatedAt"] = time.Now().Format("2006-01-02 15:04:05")
+
+	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter)
 	if err != nil {
 		return &cmn.Error{Err: errors.New("Firestore Client Error - Update Chapter: " + err.Error()), Status: http.StatusInternalServerError}
 	}
