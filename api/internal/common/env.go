@@ -15,7 +15,7 @@ func LoadEnvVariables() error {
 func GetEnvVariable(v string) (string, error) {
 	env_variable := os.Getenv(v)
 	if env_variable == "" {
-		return "", &Error{Err: errors.New("Environmental Variable" + v + " Not Found"), Status: http.StatusNotFound}
+		return "", &Error{Err: errors.New("Environmental Variable " + v + " Not Found"), Status: http.StatusNotFound}
 	}
 
 	return env_variable, nil
