@@ -92,3 +92,40 @@ func GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
 
 	return novels, nil
 }
+
+func UpdateNovel(id string, novel domain.Novel, ctx context.Context) error {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	novel.ID = id
+	novel.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
+
+	err = c.UpdateNovel(novel, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteNovel(id string, ctx context.Context) error {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	err = c.DeleteNovel(id, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
