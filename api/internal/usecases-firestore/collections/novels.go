@@ -25,19 +25,6 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 		return err
 	}
 
-	n, err := c.GetNovelById(id, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != http.StatusNotFound {
-			return err
-		}
-	} else {
-		return err
-	}
-
-	if n != nil {
-		return &cmn.Error{Err: errors.New("Novel Service Error - Create Novel - Novel with ID " + id + " already exists"), Status: http.StatusConflict}
-	}
-
 	novel.ID = id
 	novel.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 	novel.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")

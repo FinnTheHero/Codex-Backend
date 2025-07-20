@@ -25,19 +25,6 @@ func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) 
 		return err
 	}
 
-	ch, err := c.GetChapterById(novelId, id, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != http.StatusNotFound {
-			return err
-		}
-	} else {
-		return err
-	}
-
-	if ch != nil {
-		return &cmn.Error{Err: errors.New("Novel Service Error - Create Chapter - Chapter With ID " + id + " In Novel With ID " + novelId + " Already Exists"), Status: http.StatusConflict}
-	}
-
 	chapter.ID = id
 	chapter.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 	chapter.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
