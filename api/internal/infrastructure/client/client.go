@@ -17,7 +17,6 @@ type Client struct {
 
 func FirestoreClient() (*firestore.Client, error) {
 	ctx := context.Background()
-	defer ctx.Done()
 
 	json_path, err := cmn.GetEnvVariable("FIRESTORE_JSON")
 	if err != nil {
