@@ -27,7 +27,7 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 
 	n, err := c.GetNovelById(id, ctx)
 	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != 404 {
+		if e.StatusCode() != http.StatusNotFound {
 			return err
 		}
 	} else {
@@ -62,7 +62,7 @@ func GetNovel(id string, ctx context.Context) (*domain.Novel, error) {
 
 	novel, err := c.GetNovelById(id, ctx)
 	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != 404 {
+		if e.StatusCode() != http.StatusNotFound {
 			return nil, err
 		}
 	} else {

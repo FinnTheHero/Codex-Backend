@@ -27,7 +27,7 @@ func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) 
 
 	ch, err := c.GetChapterById(novelId, id, ctx)
 	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != 404 {
+		if e.StatusCode() != http.StatusNotFound {
 			return err
 		}
 	} else {
@@ -62,7 +62,7 @@ func GetChapter(novelId, chapterId string, ctx context.Context) (*domain.Chapter
 
 	chapter, err := c.GetChapterById(novelId, chapterId, ctx)
 	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != 404 {
+		if e.StatusCode() != http.StatusNotFound {
 			return nil, err
 		}
 	} else {
