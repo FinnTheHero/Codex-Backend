@@ -91,3 +91,72 @@ func CreateNovel(c *gin.Context) {
 		"message": "Novel created successfully",
 	})
 }
+
+func UpdateNovel(c *gin.Context) {
+	ctx := c.Request.Context()
+	defer ctx.Done()
+
+	novelId := c.Param("novel")
+	if novelId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Novel ID not found",
+		})
+		return
+	}
+
+	novel := domain.Novel{}
+
+	if err := c.ShouldBindJSON(&novel); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to get novel data: " + err.Error(),
+		})
+		return
+	}
+
+	err := firestore_services.UpdateNovel(novelId, novel, ctx)
+	if e, ok := err.(*common.Error); ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to update novel: " + e.Error(),
+		})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update novel: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Novel updated successfully",
+	})
+}
+
+func DeleteNovel(c *gin.Context) {
+	ctx := c.Request.Context()
+	defer ctx.Done()
+
+	novelId := c.Param("novel")
+	if novelId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Novel ID not found",
+		})
+		return
+	}
+
+	err := firestore_services.DeleteNovel(novelId, ctx)
+	if e, ok := err.(*common.Error); ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to delete novel: " + e.Error(),
+		})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to delete novel: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Novel deleted successfully",
+	})
+}
