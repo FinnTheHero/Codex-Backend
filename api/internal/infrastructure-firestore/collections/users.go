@@ -66,7 +66,7 @@ func (c *Client) GetAllUsers(ctx context.Context) (*[]domain.User, error) {
 }
 
 func (c *Client) UpdateUser(user domain.User, ctx context.Context) error {
-	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, user)
+	_, err := c.Client.Collection("users").Doc(user.ID).Set(ctx, user) // TODO: Update to use Update instead of Set
 	if err != nil {
 		return &cmn.Error{Err: errors.New("Firestore Client Error - Updating User: " + err.Error()), Status: http.StatusInternalServerError}
 	}

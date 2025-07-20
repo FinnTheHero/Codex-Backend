@@ -56,7 +56,7 @@ func (c *Client) GetAllChapters(novelId string, ctx context.Context) (*[]domain.
 }
 
 func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
-	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter)
+	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter) // TODO: Update to use Update instead of Set
 	if err != nil {
 		return &cmn.Error{Err: errors.New("Firestore Client Error - Update Chapter: " + err.Error()), Status: http.StatusInternalServerError}
 	}
