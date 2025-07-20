@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -77,7 +78,7 @@ func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx conte
 
 	updates["updatedAt"] = time.Now().Format("2006-01-02 15:04:05")
 
-	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter)
+	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, updates, firestore.MergeAll)
 	if err != nil {
 		return &cmn.Error{Err: errors.New("Firestore Client Error - Update Chapter: " + err.Error()), Status: http.StatusInternalServerError}
 	}
