@@ -47,16 +47,9 @@ func FindAllChapters(c *gin.Context) {
 
 	novelId := c.Param("novel")
 
-	if err := c.ShouldBindJSON(&novelId); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID not present in request",
-		})
-		return
-	}
-
 	if novelId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID is empty",
+			"error": "Novel ID not found",
 		})
 		return
 	}
