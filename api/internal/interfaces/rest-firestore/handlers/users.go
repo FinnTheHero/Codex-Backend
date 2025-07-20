@@ -93,7 +93,15 @@ func LoginUser(c *gin.Context) {
 }
 
 func LogoutUser(c *gin.Context) {
-	err := firestore_services.LogoutUser(c)
+	tokenString, err := c.Cookie("Authorization")
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Error logging out the user: " + err.Error(),
+		})
+		return
+	}
+
+	err = firestore_services.LogoutUser(tokenString)
 	if e, ok := err.(*common.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Error logging out the user: " + e.Error(),
@@ -105,6 +113,8 @@ func LogoutUser(c *gin.Context) {
 		})
 		return
 	}
+
+	c.SetCookie("Authorization", "", -1, "", "", true, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Logged out successfully",
