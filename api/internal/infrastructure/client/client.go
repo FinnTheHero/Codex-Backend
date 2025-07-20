@@ -19,7 +19,12 @@ func FirestoreClient() (*firestore.Client, error) {
 	ctx := context.Background()
 	defer ctx.Done()
 
-	sa := option.WithCredentialsFile("./firestore.json")
+	json_path, err := cmn.GetEnvVariable("FIRESTORE_JSON")
+	if err != nil {
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - FIRESTORE_JSON: " + err.Error()), Status: http.StatusInternalServerError}
+	}
+
+	sa := option.WithCredentialsFile(json_path)
 
 	app, err := firebase.NewApp(ctx, nil, sa)
 	if err != nil {
