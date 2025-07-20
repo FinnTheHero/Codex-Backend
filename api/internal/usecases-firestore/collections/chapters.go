@@ -26,10 +26,12 @@ func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) 
 	}
 
 	ch, err := c.GetChapterById(novelId, id, ctx)
-	if e, ok := err.(*cmn.Error); !ok {
+	if e, ok := err.(*cmn.Error); ok {
 		if e.StatusCode() != 404 {
 			return err
 		}
+	} else {
+		return err
 	}
 
 	if ch != nil {
@@ -59,10 +61,12 @@ func GetChapter(novelId, chapterId string, ctx context.Context) (*domain.Chapter
 	c := firestore_collections.Client{Client: client}
 
 	chapter, err := c.GetChapterById(novelId, chapterId, ctx)
-	if e, ok := err.(*cmn.Error); !ok {
+	if e, ok := err.(*cmn.Error); ok {
 		if e.StatusCode() != 404 {
 			return nil, err
 		}
+	} else {
+		return nil, err
 	}
 
 	if chapter == nil {
