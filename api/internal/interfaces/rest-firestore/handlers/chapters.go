@@ -116,3 +116,61 @@ func CreateChapter(c *gin.Context) {
 		"chapter": chapter,
 	})
 }
+
+func UpdateChapter(c *gin.Context) {
+	ctx := c.Request.Context()
+	defer ctx.Done()
+
+	novelId := c.Param("novel")
+
+	chapter := domain.Chapter{}
+
+	if err := c.ShouldBindJSON(&chapter); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to get chapter data: " + err.Error(),
+		})
+		return
+	}
+
+	err := firestore_services.UpdateChapter(novelId, &chapter, ctx)
+	if e, ok := err.(*common.Error); !ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to update chapter: " + e.Error(),
+		})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update chapter: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"chapter": chapter,
+	})
+}
+
+func DeleteChapter(c *gin.Context) {
+	ctx := c.Request.Context()
+	defer ctx.Done()
+
+	novelId := c.Param("novel")
+	chapterId := c.Param("chapter")
+
+	err := firestore_services.DeleteChapter(novelId, chapterId, ctx)
+	if e, ok := err.(*common.Error); !ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to delete chapter: " + e.Error(),
+		})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to delete chapter: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Chapter deleted successfully",
+	})
+}
