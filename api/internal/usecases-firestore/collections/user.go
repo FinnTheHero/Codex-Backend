@@ -105,3 +105,37 @@ func LogoutUser(c *gin.Context) error {
 
 	return nil
 }
+
+func UpdateUser(updatedUser domain.User, ctx context.Context) error {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	err = c.UpdateUser(updatedUser, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteUser(id string, ctx context.Context) error {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	err = c.DeleteUser(id, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
