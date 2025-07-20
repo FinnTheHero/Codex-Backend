@@ -3,7 +3,7 @@ package firestore_handlers
 import (
 	"Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_services "Codex-Backend/api/internal/usecases-firestore/auth"
+	firestore_services "Codex-Backend/api/internal/usecases-firestore/collections"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
