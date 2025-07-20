@@ -94,3 +94,37 @@ func GetAllChapters(novelId string, ctx context.Context) (*[]domain.Chapter, err
 
 	return chapters, nil
 }
+
+func UpdateChapter(novelId string, chapter *domain.Chapter, ctx context.Context) error {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	err = c.UpdateChapter(novelId, *chapter, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteChapter(novelId, chapterId string, ctx context.Context) error {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	err = c.DeleteChapter(novelId, chapterId, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
