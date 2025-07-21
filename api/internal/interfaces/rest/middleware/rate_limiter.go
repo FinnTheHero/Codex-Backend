@@ -17,6 +17,7 @@ func RateLimiter() gin.HandlerFunc {
 			})
 			return
 		}
+		// TODO: Improve rate limiting logic. Add more detailed cooldown to IPs itself.
 		c.Next()
 	}
 }
