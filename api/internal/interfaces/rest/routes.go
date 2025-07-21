@@ -19,6 +19,7 @@ func RegisteredRoutes(r *gin.Engine) {
 			"GET",
 			"POST",
 			"DELETE",
+			"PUT",
 		},
 		AllowHeaders: []string{
 			"Origin",
@@ -50,8 +51,11 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	manage := r.Group("/manage")
 	{
-		manage.POST("/novel", firestore_middleware.ValidateToken(), firestore_middleware.IsAdmin(), firestore_handlers.CreateNovel)
-		manage.POST("/:novel/chapter", firestore_middleware.ValidateToken(), firestore_middleware.IsAdmin(), firestore_handlers.CreateChapter)
+		manage.POST("/novel", firestore_middleware.ValidateToken(), firestore_handlers.CreateNovel)
+		manage.POST("/:novel/chapter", firestore_middleware.ValidateToken(), firestore_handlers.CreateChapter)
+		manage.PUT("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.UpdateNovel)
+		manage.PUT("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.UpdateChapter)
+
 	}
 
 	user := r.Group("/user")
