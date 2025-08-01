@@ -96,16 +96,20 @@ func (c *Client) DeleteNovel(novelId string, ctx context.Context) error {
 }
 
 func (c *Client) GetNovelByTitle(title string, ctx context.Context) (*domain.Novel, error) {
-	novels, err := c.GetAllNovels(ctx)
+	query := c.Client.Collection("novels").Where("Title", "==", title).Limit(1)
+	docs, err := query.Documents(ctx).GetAll()
 	if err != nil {
-		return nil, err
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by Title: " + err.Error()), Status: http.StatusInternalServerError}
 	}
 
-	for _, novel := range *novels {
-		if novel.Title == title {
-			return &novel, nil
-		}
+	if len(docs) == 0 {
+		return nil, &cmn.Error{Err: errors.New("Novel not found"), Status: http.StatusNotFound}
 	}
 
-	return nil, &cmn.Error{Err: errors.New("Novel not found"), Status: http.StatusNotFound}
+	novel := domain.Novel{}
+	if err := docs[0].DataTo(&novel); err != nil {
+		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by Title: " + err.Error()), Status: http.StatusInternalServerError}
+	}
+
+	return &novel, nil
 }
