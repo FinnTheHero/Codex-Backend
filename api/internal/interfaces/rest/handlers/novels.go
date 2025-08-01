@@ -47,13 +47,6 @@ func FindNovel(c *gin.Context) {
 			return
 		}
 
-		if novel == nil {
-			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-				"error": "Novel not found",
-			})
-			return
-		}
-
 		c.JSON(http.StatusOK, gin.H{
 			"novel": novel,
 		})
