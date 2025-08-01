@@ -13,30 +13,71 @@ func FindNovel(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novelId := c.Param("novel")
-	if novelId == "" {
+	novelId := c.Param("id")
+	title := c.Param("title")
+
+	if novelId != "" {
+		novel, err := firestore_services.GetNovelById(novelId, ctx)
+		if e, ok := err.(*cmn.Error); ok {
+			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+				"error": "Failed to retrieve novel: " + e.Error(),
+			})
+			return
+		} else if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to retrieve novel: " + err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"novel": novel,
+		})
+	} else if title != "" {
+		novel, err := firestore_services.GetNovelByTitle(title, ctx)
+		if e, ok := err.(*cmn.Error); ok {
+			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+				"error": "Failed to retrieve novel: " + e.Error(),
+			})
+			return
+		} else if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to retrieve novel: " + err.Error(),
+			})
+			return
+		}
+
+		if novel == nil {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"error": "Novel not found",
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"novel": novel,
+		})
+	} else {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID not found",
+			"error": "Novel Title and ID not found",
 		})
 		return
 	}
 
-	novel, err := firestore_services.GetNovel(novelId, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
-			"error": "Failed to retrieve novel: " + e.Error(),
-		})
-		return
-	} else if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve novel: " + err.Error(),
+}
+
+func FindNovelByTitle(c *gin.Context) {
+	ctx := c.Request.Context()
+	defer ctx.Done()
+
+	title := c.Param("title")
+	if title == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Novel title not found",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"novel": novel,
-	})
 }
 
 func FindAllNovels(c *gin.Context) {
