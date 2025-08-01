@@ -65,21 +65,6 @@ func FindNovel(c *gin.Context) {
 		})
 		return
 	}
-
-}
-
-func FindNovelByTitle(c *gin.Context) {
-	ctx := c.Request.Context()
-	defer ctx.Done()
-
-	title := c.Param("title")
-	if title == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel title not found",
-		})
-		return
-	}
-
 }
 
 func FindAllNovels(c *gin.Context) {
