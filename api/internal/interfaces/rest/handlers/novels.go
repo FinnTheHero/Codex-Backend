@@ -5,6 +5,7 @@ import (
 	"Codex-Backend/api/internal/domain"
 	firestore_services "Codex-Backend/api/internal/usecases/collections"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,11 +14,19 @@ func FindNovel(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novelId := c.Param("id")
-	title := c.Param("title")
+	param := c.Param("novel")
 
-	if novelId != "" {
-		novel, err := firestore_services.GetNovelById(novelId, ctx)
+	withId := false
+	withTitle := false
+
+	if strings.HasPrefix(param, "novel_") {
+		withId = true
+	} else {
+		withTitle = true
+	}
+
+	if withId {
+		novel, err := firestore_services.GetNovelById(param, ctx)
 		if e, ok := err.(*cmn.Error); ok {
 			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 				"error": "Failed to retrieve novel: " + e.Error(),
@@ -33,8 +42,8 @@ func FindNovel(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"novel": novel,
 		})
-	} else if title != "" {
-		novel, err := firestore_services.GetNovelByTitle(title, ctx)
+	} else if withTitle {
+		novel, err := firestore_services.GetNovelByTitle(param, ctx)
 		if e, ok := err.(*cmn.Error); ok {
 			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 				"error": "Failed to retrieve novel: " + e.Error(),
