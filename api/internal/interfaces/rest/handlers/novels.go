@@ -5,6 +5,7 @@ import (
 	"Codex-Backend/api/internal/domain"
 	firestore_services "Codex-Backend/api/internal/usecases/collections"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -13,30 +14,57 @@ func FindNovel(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novelId := c.Param("novel")
-	if novelId == "" {
+	param := c.Param("novel")
+
+	withId := false
+	withTitle := false
+
+	if strings.HasPrefix(param, "novel_") {
+		withId = true
+	} else {
+		withTitle = true
+	}
+
+	if withId {
+		novel, err := firestore_services.GetNovelById(param, ctx)
+		if e, ok := err.(*cmn.Error); ok {
+			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+				"error": "Failed to retrieve novel: " + e.Error(),
+			})
+			return
+		} else if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to retrieve novel: " + err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"novel": novel,
+		})
+	} else if withTitle {
+		novel, err := firestore_services.GetNovelByTitle(param, ctx)
+		if e, ok := err.(*cmn.Error); ok {
+			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+				"error": "Failed to retrieve novel: " + e.Error(),
+			})
+			return
+		} else if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"error": "Failed to retrieve novel: " + err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"novel": novel,
+		})
+	} else {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID not found",
+			"error": "Novel Title and ID not found",
 		})
 		return
 	}
-
-	novel, err := firestore_services.GetNovel(novelId, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
-			"error": "Failed to retrieve novel: " + e.Error(),
-		})
-		return
-	} else if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to retrieve novel: " + err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"novel": novel,
-	})
 }
 
 func FindAllNovels(c *gin.Context) {

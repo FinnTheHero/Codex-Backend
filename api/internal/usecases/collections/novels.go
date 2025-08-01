@@ -38,7 +38,7 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 	return nil
 }
 
-func GetNovel(id string, ctx context.Context) (*domain.Novel, error) {
+func GetNovelById(id string, ctx context.Context) (*domain.Novel, error) {
 	client, err := firestore_client.FirestoreClient()
 	if err != nil {
 		return nil, err
@@ -54,6 +54,27 @@ func GetNovel(id string, ctx context.Context) (*domain.Novel, error) {
 
 	if novel == nil {
 		return nil, &cmn.Error{Err: errors.New("Novel Service Error - Get Novel - Novel with ID " + id + " not found"), Status: http.StatusNotFound}
+	}
+
+	return novel, nil
+}
+
+func GetNovelByTitle(title string, ctx context.Context) (*domain.Novel, error) {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	novel, err := c.GetNovelByTitle(title, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if novel == nil {
+		return nil, &cmn.Error{Err: errors.New("Novel Service Error - Get Novel - Novel with title " + title + " not found"), Status: http.StatusNotFound}
 	}
 
 	return novel, nil

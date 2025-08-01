@@ -46,7 +46,6 @@ func RegisteredRoutes(r *gin.Engine) {
 		client.GET("/:novel", firestore_handlers.FindNovel)
 		client.GET("/:novel/all", firestore_handlers.FindAllChapters)
 		client.GET("/:novel/:chapter", firestore_handlers.FindChapter)
-		// client.GET("/:novel/:chapter/next-previous", handlers.FindPreviousAndNextChapters) // Will Probably remove this entierly later
 	}
 
 	manage := r.Group("/manage")
