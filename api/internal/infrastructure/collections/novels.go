@@ -94,3 +94,18 @@ func (c *Client) DeleteNovel(novelId string, ctx context.Context) error {
 
 	return nil
 }
+
+func (c *Client) GetNovelByTitle(title string, ctx context.Context) (*domain.Novel, error) {
+	novels, err := c.GetAllNovels(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, novel := range *novels {
+		if novel.Title == title {
+			return &novel, nil
+		}
+	}
+
+	return nil, &cmn.Error{Err: errors.New("Novel not found"), Status: http.StatusNotFound}
+}
