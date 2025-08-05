@@ -5,6 +5,7 @@ import (
 	"Codex-Backend/api/internal/domain"
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -12,6 +13,45 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.Context) error {
+	coll := c.Client.Collection("novels").Doc(novelId).Collection("chapters")
+	const chunkSize = 500
+
+	for i := 0; i < len(chapters); i += chunkSize {
+		subset := chapters[i:min(i+chunkSize, len(chapters))]
+
+		bw := c.Client.BulkWriter(ctx)
+		jobs := make([]*firestore.BulkWriterJob, 0, len(subset))
+
+		for _, chap := range subset {
+			job, err := bw.Set(coll.Doc(chap.ID), chap)
+			if err != nil {
+				return &cmn.Error{
+					Err:    fmt.Errorf("enqueue failed for chapter %s: %w", chap.ID, err),
+					Status: http.StatusInternalServerError,
+				}
+			}
+			jobs = append(jobs, job)
+		}
+
+		bw.Flush()
+		bw.End()
+
+		// Check each job’s result to catch silent failures
+		for j, job := range jobs {
+			if _, err := job.Results(); err != nil {
+				chap := subset[j]
+				return &cmn.Error{
+					Err:    fmt.Errorf("write failed for chapter %s: %w", chap.ID, err),
+					Status: http.StatusInternalServerError,
+				}
+			}
+		}
+	}
+
+	return nil
+}
 
 func (c *Client) CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
 	_, err := c.Client.Collection("novels").Doc(novelId).Collection("chapters").Doc(chapter.ID).Set(ctx, chapter)
