@@ -11,6 +11,46 @@ import (
 	"time"
 )
 
+func BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.Context) error {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	final := []domain.Chapter{}
+
+	for _, chapter := range chapters {
+		id, err := cmn.GenerateID("chapter")
+		if err != nil {
+			return err
+		}
+
+		chapter.ID = id
+		chapter.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
+		chapter.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
+		chapter.UploadedAt = time.Now().Format("2006-01-02 15:04:05")
+
+		final = append(final, chapter)
+	}
+
+	if len(final) == 0 {
+		return &cmn.Error{
+			Err:    errors.New("Nothing to upload"),
+			Status: http.StatusInternalServerError,
+		}
+	}
+
+	err = c.BatchUploadChapters(novelId, final, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
 	client, err := firestore_client.FirestoreClient()
 	if err != nil {
