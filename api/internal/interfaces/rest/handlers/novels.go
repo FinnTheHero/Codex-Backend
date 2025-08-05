@@ -102,7 +102,7 @@ func CreateNovel(c *gin.Context) {
 		return
 	}
 
-	err := firestore_services.CreateNovel(novel, ctx)
+	err, id := firestore_services.CreateNovel(novel, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to create novel: " + e.Error(),
@@ -117,6 +117,7 @@ func CreateNovel(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Novel created successfully",
+		"id":      id,
 	})
 }
 
