@@ -72,6 +72,52 @@ func FindAllChapters(c *gin.Context) {
 	})
 }
 
+func BatchUploadChapters(c *gin.Context) {
+	ctx := c.Request.Context()
+	defer ctx.Done()
+
+	novelId := c.Param("novel")
+
+	if novelId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Novel ID not found",
+		})
+		return
+	}
+
+	var chapters []domain.Chapter
+	if err := c.ShouldBindJSON(&chapters); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to get chapters data: " + err.Error(),
+		})
+		return
+	}
+
+	if len(chapters) == 0 {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Nothing to upload",
+		})
+		return
+	}
+
+	err := firestore_services.BatchUploadChapters(novelId, chapters, ctx)
+	if e, ok := err.(*cmn.Error); ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to upload chapters: " + e.Error(),
+		})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to upload chapters: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Chapters uploaded successfully",
+	})
+}
+
 func CreateChapter(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
