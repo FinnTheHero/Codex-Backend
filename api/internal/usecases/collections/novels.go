@@ -11,10 +11,10 @@ import (
 	"time"
 )
 
-func CreateNovel(novel domain.Novel, ctx context.Context) error {
+func CreateNovel(novel domain.Novel, ctx context.Context) (error, string) {
 	client, err := firestore_client.FirestoreClient()
 	if err != nil {
-		return err
+		return err, ""
 	}
 	defer client.Close()
 
@@ -22,7 +22,7 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 
 	id, err := cmn.GenerateID("novel")
 	if err != nil {
-		return err
+		return err, ""
 	}
 
 	novel.ID = id
@@ -32,10 +32,10 @@ func CreateNovel(novel domain.Novel, ctx context.Context) error {
 
 	err = c.CreateNovel(novel, ctx)
 	if err != nil {
-		return err
+		return err, ""
 	}
 
-	return nil
+	return nil, id
 }
 
 func GetNovelById(id string, ctx context.Context) (*domain.Novel, error) {
