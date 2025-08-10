@@ -11,6 +11,27 @@ import (
 	"time"
 )
 
+func GetCursorPaginatedChapters(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
+	client, err := firestore_client.FirestoreClient()
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	if options.Limit > 100 || options.Limit <= 0 {
+		options.Limit = 100
+	}
+
+	response, err := c.CursorPagination(options, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
 func BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.Context) error {
 	client, err := firestore_client.FirestoreClient()
 	if err != nil {
