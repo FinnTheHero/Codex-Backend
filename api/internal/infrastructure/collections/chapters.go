@@ -14,22 +14,30 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Context) (domain.CursorResponse, error) {
+func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
 	coll := c.Client.Collection("novels").Doc(options.NovelID).Collection("chapters")
 	querry := coll.OrderBy("CreatedAt", options.SortBy).OrderBy("Title", options.SortBy)
 
+	if options.Cursor == "" {
+		snaps, err := coll.OrderBy("CreatedAt", firestore.Desc).OrderBy("Title", firestore.Desc).Documents(ctx).GetAll()
+		options.Cursor = snaps[0].Ref.ID
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	chapter, err := c.GetChapterById(options.NovelID, options.Cursor, ctx)
 	if err != nil {
-		return domain.CursorResponse{}, err
+		return nil, err
 	}
 
 	snapshots, err := querry.StartAfter(&chapter).Limit(options.Limit + 1).Documents(ctx).GetAll()
 	if err != nil {
-		return domain.CursorResponse{}, err
+		return nil, err
 	}
 
 	if len(snapshots) == 0 {
-		return domain.CursorResponse{}, &cmn.Error{
+		return nil, &cmn.Error{
 			Err:    fmt.Errorf("Firestore Client Error - Get Paginated Chapters - No Chapters Found for Novel %s: %w", options.NovelID, err),
 			Status: http.StatusNotFound,
 		}
@@ -44,12 +52,12 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 	for _, snapshot := range snapshots {
 		var chapter domain.Chapter
 		if err := snapshot.DataTo(&chapter); err != nil {
-			return domain.CursorResponse{}, err
+			return nil, err
 		}
 		chapters = append(chapters, chapter)
 	}
 
-	return domain.CursorResponse{
+	return &domain.CursorResponse{
 		Chapters:   chapters,
 		NextCursor: nextCursor,
 	}, err
