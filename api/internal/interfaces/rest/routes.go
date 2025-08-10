@@ -46,6 +46,7 @@ func RegisteredRoutes(r *gin.Engine) {
 		client.GET("/:novel", firestore_handlers.FindNovel)
 		client.GET("/:novel/all", firestore_handlers.FindAllChapters)
 		client.GET("/:novel/:chapter", firestore_handlers.FindChapter)
+		client.GET("/:novel/chapters", firestore_handlers.GetPaginatedChapters)
 	}
 
 	manage := r.Group("/manage")
@@ -57,7 +58,6 @@ func RegisteredRoutes(r *gin.Engine) {
 		manage.PUT("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.UpdateChapter)
 		manage.DELETE("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.DeleteNovel)
 		manage.DELETE("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.DeleteChapter)
-
 	}
 
 	user := r.Group("/user")

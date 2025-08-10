@@ -5,9 +5,68 @@ import (
 	"Codex-Backend/api/internal/domain"
 	firestore_services "Codex-Backend/api/internal/usecases/collections"
 	"net/http"
+	"strconv"
+	"strings"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 )
+
+func GetPaginatedChapters(c *gin.Context) {
+	ctx := c.Request.Context()
+	defer ctx.Done()
+
+	novelId := c.Param("novel")
+	if novelId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Novel ID not found",
+		})
+		return
+	}
+
+	options := domain.CursorOptions{
+		NovelID: novelId,
+		Cursor:  "",
+		Limit:   100,
+		SortBy:  firestore.Desc,
+	}
+
+	if cursor, exists := c.GetQuery("cursor"); exists {
+		split := strings.Split(cursor, "_")
+		if len(split) != 2 || split[0] != "chapter" {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid cursor format",
+			})
+			return
+		}
+		options.Cursor = cursor
+	}
+
+	if limit, exists := c.GetQuery("limit"); exists {
+		lim, err := strconv.ParseInt(limit, 10, 64)
+		if err == nil {
+			options.Limit = int(lim)
+		}
+	}
+
+	response, err := firestore_services.GetCursorPaginatedChapters(options, ctx)
+	if e, ok := err.(*cmn.Error); ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to retrieve chapters: " + e.Error(),
+		})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve chapters: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"chapters":   &response.Chapters,
+		"nextCursor": &response.NextCursor,
+	})
+}
 
 func FindChapter(c *gin.Context) {
 	ctx := c.Request.Context()
