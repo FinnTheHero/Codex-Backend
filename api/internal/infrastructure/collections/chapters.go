@@ -16,10 +16,10 @@ import (
 
 func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
 	coll := c.Client.Collection("novels").Doc(options.NovelID).Collection("chapters")
-	querry := coll.OrderBy("CreatedAt", options.SortBy).OrderBy("Title", options.SortBy)
+	query := coll.OrderBy(firestore.DocumentID, options.SortBy)
 
 	if options.Cursor == "" {
-		snaps, err := coll.OrderBy("CreatedAt", firestore.Desc).OrderBy("Title", firestore.Desc).Documents(ctx).GetAll()
+		snaps, err := query.Limit(options.Limit + 1).Documents(ctx).GetAll()
 		options.Cursor = snaps[0].Ref.ID
 		if err != nil {
 			return nil, err
@@ -31,14 +31,14 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		return nil, err
 	}
 
-	snapshots, err := querry.StartAfter(&chapter).Limit(options.Limit + 1).Documents(ctx).GetAll()
+	snapshots, err := query.StartAfter(chapter.ID).Limit(options.Limit + 1).Documents(ctx).GetAll()
 	if err != nil {
 		return nil, err
 	}
 
 	if len(snapshots) == 0 {
 		return nil, &cmn.Error{
-			Err:    fmt.Errorf("Firestore Client Error - Get Paginated Chapters - No Chapters Found for Novel %s: %w", options.NovelID, err),
+			Err:    fmt.Errorf("Firestore Client Error - Get Paginated Chapters - No Chapters Found for Novel: %s", options.NovelID),
 			Status: http.StatusNotFound,
 		}
 	}
