@@ -7,9 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"github.com/fvbommel/sortorder"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -56,6 +58,14 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		}
 		chapters = append(chapters, chapter)
 	}
+
+	sort.Slice(chapters, func(i, j int) bool {
+		if options.SortBy == firestore.Asc {
+			return sortorder.NaturalLess(chapters[i].Title, chapters[j].Title)
+		} else {
+			return sortorder.NaturalLess(chapters[j].Title, chapters[i].Title)
+		}
+	})
 
 	return &domain.CursorResponse{
 		Chapters:   chapters,
