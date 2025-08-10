@@ -14,6 +14,47 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Context) (domain.CursorResponse, error) {
+	coll := c.Client.Collection("novels").Doc(options.NovelID).Collection("chapters")
+	querry := coll.OrderBy("CreatedAt", options.SortBy).OrderBy("Title", options.SortBy)
+
+	chapter, err := c.GetChapterById(options.NovelID, options.Cursor, ctx)
+	if err != nil {
+		return domain.CursorResponse{}, err
+	}
+
+	snapshots, err := querry.StartAfter(&chapter).Limit(options.Limit + 1).Documents(ctx).GetAll()
+	if err != nil {
+		return domain.CursorResponse{}, err
+	}
+
+	if len(snapshots) == 0 {
+		return domain.CursorResponse{}, &cmn.Error{
+			Err:    fmt.Errorf("Firestore Client Error - Get Paginated Chapters - No Chapters Found for Novel %s: %w", options.NovelID, err),
+			Status: http.StatusNotFound,
+		}
+	}
+
+	chapters := make([]domain.Chapter, 0, options.Limit)
+	nextCursor := ""
+	if len(snapshots) > options.Limit {
+		nextCursor = snapshots[len(snapshots)-1].Ref.ID
+	}
+
+	for _, snapshot := range snapshots {
+		var chapter domain.Chapter
+		if err := snapshot.DataTo(&chapter); err != nil {
+			return domain.CursorResponse{}, err
+		}
+		chapters = append(chapters, chapter)
+	}
+
+	return domain.CursorResponse{
+		Chapters:   chapters,
+		NextCursor: nextCursor,
+	}, err
+}
+
 func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.Context) error {
 	coll := c.Client.Collection("novels").Doc(novelId).Collection("chapters")
 	const chunkSize = 500
