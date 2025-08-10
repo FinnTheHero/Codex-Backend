@@ -28,7 +28,7 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 			job, err := bw.Set(coll.Doc(chap.ID), chap)
 			if err != nil {
 				return &cmn.Error{
-					Err:    fmt.Errorf("enqueue failed for chapter %s: %w", chap.ID, err),
+					Err:    fmt.Errorf("Firestore Client Error - Batch Upload Chapters - Enqueue failed for chapter %s: %w", chap.ID, err),
 					Status: http.StatusInternalServerError,
 				}
 			}
@@ -43,7 +43,7 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 			if _, err := job.Results(); err != nil {
 				chap := subset[j]
 				return &cmn.Error{
-					Err:    fmt.Errorf("write failed for chapter %s: %w", chap.ID, err),
+					Err:    fmt.Errorf("Firestore Client Error - Batch Upload Chapters - Write failed for chapter %s: %w", chap.ID, err),
 					Status: http.StatusInternalServerError,
 				}
 			}
