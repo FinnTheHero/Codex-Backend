@@ -14,6 +14,55 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
+	coll := c.Client.Collection("novels").Doc(options.NovelID).Collection("chapters")
+	query := coll.OrderBy(firestore.DocumentID, options.SortBy)
+
+	if options.Cursor == "" {
+		snaps, err := query.Limit(options.Limit + 1).Documents(ctx).GetAll()
+		options.Cursor = snaps[0].Ref.ID
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	chapter, err := c.GetChapterById(options.NovelID, options.Cursor, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	snapshots, err := query.StartAfter(chapter.ID).Limit(options.Limit + 1).Documents(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(snapshots) == 0 {
+		return nil, &cmn.Error{
+			Err:    fmt.Errorf("Firestore Client Error - Get Paginated Chapters - No Chapters Found for Novel: %s", options.NovelID),
+			Status: http.StatusNotFound,
+		}
+	}
+
+	chapters := make([]domain.Chapter, 0, options.Limit)
+	nextCursor := ""
+	if len(snapshots) > options.Limit {
+		nextCursor = snapshots[len(snapshots)-1].Ref.ID
+	}
+
+	for _, snapshot := range snapshots {
+		var chapter domain.Chapter
+		if err := snapshot.DataTo(&chapter); err != nil {
+			return nil, err
+		}
+		chapters = append(chapters, chapter)
+	}
+
+	return &domain.CursorResponse{
+		Chapters:   chapters,
+		NextCursor: nextCursor,
+	}, err
+}
+
 func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.Context) error {
 	coll := c.Client.Collection("novels").Doc(novelId).Collection("chapters")
 	const chunkSize = 500
@@ -28,7 +77,7 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 			job, err := bw.Set(coll.Doc(chap.ID), chap)
 			if err != nil {
 				return &cmn.Error{
-					Err:    fmt.Errorf("enqueue failed for chapter %s: %w", chap.ID, err),
+					Err:    fmt.Errorf("Firestore Client Error - Batch Upload Chapters - Enqueue failed for chapter %s: %w", chap.ID, err),
 					Status: http.StatusInternalServerError,
 				}
 			}
@@ -43,7 +92,7 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 			if _, err := job.Results(); err != nil {
 				chap := subset[j]
 				return &cmn.Error{
-					Err:    fmt.Errorf("write failed for chapter %s: %w", chap.ID, err),
+					Err:    fmt.Errorf("Firestore Client Error - Batch Upload Chapters - Write failed for chapter %s: %w", chap.ID, err),
 					Status: http.StatusInternalServerError,
 				}
 			}
