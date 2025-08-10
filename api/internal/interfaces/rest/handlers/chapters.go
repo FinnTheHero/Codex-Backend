@@ -49,6 +49,17 @@ func GetPaginatedChapters(c *gin.Context) {
 		}
 	}
 
+	if sortBy, exists := c.GetQuery("sort"); exists {
+		switch sortBy {
+		case "asc":
+			options.SortBy = firestore.Asc
+		case "desc":
+			options.SortBy = firestore.Desc
+		default:
+			options.SortBy = firestore.Desc
+		}
+	}
+
 	response, err := firestore_services.GetCursorPaginatedChapters(options, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{

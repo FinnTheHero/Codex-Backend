@@ -7,9 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"github.com/fvbommel/sortorder"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -31,7 +33,7 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		return nil, err
 	}
 
-	snapshots, err := query.StartAfter(chapter.ID).Limit(options.Limit + 1).Documents(ctx).GetAll()
+	snapshots, err := query.StartAt(chapter.ID).Limit(options.Limit + 1).Documents(ctx).GetAll()
 	if err != nil {
 		return nil, err
 	}
@@ -49,13 +51,21 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		nextCursor = snapshots[len(snapshots)-1].Ref.ID
 	}
 
-	for _, snapshot := range snapshots {
+	for _, snapshot := range snapshots[:len(snapshots)-1] {
 		var chapter domain.Chapter
 		if err := snapshot.DataTo(&chapter); err != nil {
 			return nil, err
 		}
 		chapters = append(chapters, chapter)
 	}
+
+	sort.Slice(chapters, func(i, j int) bool {
+		if options.SortBy == firestore.Asc {
+			return sortorder.NaturalLess(chapters[i].Title, chapters[j].Title)
+		} else {
+			return sortorder.NaturalLess(chapters[j].Title, chapters[i].Title)
+		}
+	})
 
 	return &domain.CursorResponse{
 		Chapters:   chapters,
