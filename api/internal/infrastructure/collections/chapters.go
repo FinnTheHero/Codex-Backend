@@ -45,14 +45,8 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		}
 	}
 
-	// Clamp options.Limit to a safe range before allocation
-	limit := options.Limit
-	if limit > 100 {
-		limit = 100
-	}
-	if limit < 1 {
-		limit = 1
-	}
+	limit := min(max(options.Limit, 1), 100)
+
 	chapters := make([]domain.Chapter, 0, limit)
 	nextCursor := ""
 	if len(snapshots) > options.Limit {
