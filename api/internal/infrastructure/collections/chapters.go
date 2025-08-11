@@ -45,7 +45,9 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		}
 	}
 
-	chapters := make([]domain.Chapter, 0, options.Limit)
+	limit := min(max(options.Limit, 1), 100)
+
+	chapters := make([]domain.Chapter, 0, limit)
 	nextCursor := ""
 	if len(snapshots) > options.Limit {
 		nextCursor = snapshots[len(snapshots)-1].Ref.ID

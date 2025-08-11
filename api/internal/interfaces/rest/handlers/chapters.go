@@ -43,9 +43,9 @@ func GetPaginatedChapters(c *gin.Context) {
 	}
 
 	if limit, exists := c.GetQuery("limit"); exists {
-		lim, err := strconv.ParseInt(limit, 10, 64)
+		lim, err := strconv.Atoi(limit)
 		if err == nil {
-			options.Limit = int(lim)
+			options.Limit = lim
 		}
 	}
 
