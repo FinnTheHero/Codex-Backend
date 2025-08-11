@@ -16,12 +16,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const Limit = 100
+
 func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
 	coll := c.Client.Collection("novels").Doc(options.NovelID).Collection("chapters")
 	query := coll.OrderBy(firestore.DocumentID, options.SortBy)
 
+	limit := min(max(options.Limit, 1), Limit)
+
 	if options.Cursor == "" {
-		snaps, err := query.Limit(options.Limit + 1).Documents(ctx).GetAll()
+		snaps, err := query.Limit(limit + 1).Documents(ctx).GetAll()
 		options.Cursor = snaps[0].Ref.ID
 		if err != nil {
 			return nil, err
@@ -33,7 +37,7 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		return nil, err
 	}
 
-	snapshots, err := query.StartAt(chapter.ID).Limit(options.Limit + 1).Documents(ctx).GetAll()
+	snapshots, err := query.StartAt(chapter.ID).Limit(limit + 1).Documents(ctx).GetAll()
 	if err != nil {
 		return nil, err
 	}
@@ -45,11 +49,9 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		}
 	}
 
-	limit := min(max(options.Limit, 1), 100)
-
 	chapters := make([]domain.Chapter, 0, limit)
 	nextCursor := ""
-	if len(snapshots) > options.Limit {
+	if len(snapshots) > limit {
 		nextCursor = snapshots[len(snapshots)-1].Ref.ID
 	}
 
