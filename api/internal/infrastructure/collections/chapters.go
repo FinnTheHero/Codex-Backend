@@ -55,7 +55,12 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		nextCursor = snapshots[len(snapshots)-1].Ref.ID
 	}
 
-	for _, snapshot := range snapshots[:len(snapshots)-1] {
+	snapLen := len(snapshots) - 1
+	if snapLen <= 0 {
+		snapLen++
+	}
+
+	for _, snapshot := range snapshots[:snapLen] {
 		var chapter domain.Chapter
 		if err := snapshot.DataTo(&chapter); err != nil {
 			return nil, err
