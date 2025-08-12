@@ -26,10 +26,18 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 
 	if options.Cursor == "" {
 		snaps, err := query.Limit(limit + 1).Documents(ctx).GetAll()
-		options.Cursor = snaps[0].Ref.ID
 		if err != nil {
 			return nil, err
 		}
+
+		if len(snaps) == 0 {
+			return nil, &cmn.Error{
+				Err:    fmt.Errorf("Firestore Client Error - Get Paginated Chapters - No Chapters Found for Novel: %s", options.NovelID),
+				Status: http.StatusNotFound,
+			}
+		}
+
+		options.Cursor = snaps[0].Ref.ID
 	}
 
 	chapter, err := c.GetChapterById(options.NovelID, options.Cursor, ctx)
