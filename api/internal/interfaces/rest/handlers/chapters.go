@@ -74,8 +74,8 @@ func GetPaginatedChapters(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"chapters":   &response.Chapters,
-		"nextCursor": &response.NextCursor,
+		"chapters":    &response.Chapters,
+		"next_cursor": &response.NextCursor,
 	})
 }
 
