@@ -52,7 +52,7 @@ func BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.
 		chapter.ID = id
 		chapter.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 		chapter.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
-		chapter.UploadedAt = time.Now().Format("2006-01-02 15:04:05")
+		chapter.Deleted = false
 
 		final = append(final, chapter)
 	}
@@ -89,7 +89,7 @@ func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) 
 	chapter.ID = id
 	chapter.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 	chapter.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
-	chapter.UploadedAt = time.Now().Format("2006-01-02 15:04:05")
+	chapter.Deleted = false
 
 	err = c.CreateChapter(novelId, chapter, ctx)
 	if err != nil {

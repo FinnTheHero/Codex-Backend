@@ -28,7 +28,7 @@ func CreateNovel(novel domain.Novel, ctx context.Context) (error, string) {
 	novel.ID = id
 	novel.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
 	novel.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
-	novel.UploadedAt = time.Now().Format("2006-01-02 15:04:05")
+	novel.Deleted = false
 
 	err = c.CreateNovel(novel, ctx)
 	if err != nil {
