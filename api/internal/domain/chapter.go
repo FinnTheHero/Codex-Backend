@@ -14,13 +14,26 @@ type CursorResponse struct {
 	NextCursor string    `json:"next_cursor"`
 }
 
+// Chapter struct used on backend
 type Chapter struct {
 	ID          string `json:"id"`
 	Title       string `json:"title"`
 	Author      string `json:"author"`
 	Description string `json:"description"`
 	CreatedAt   string `json:"creation_date"`
-	UploadedAt  string `json:"upload_date"`
+	UpdatedAt   string `json:"update_date"`
+	Content     string `json:"content"`
+	Index       int    `json:"index"`
+	Deleted     bool   `json:"deleted"`
+}
+
+// Chapter struct used on frontend
+type FrontendChapter struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Author      string `json:"author"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"creation_date"`
 	UpdatedAt   string `json:"update_date"`
 	Content     string `json:"content"`
 }
