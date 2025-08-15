@@ -4,14 +4,14 @@ import "cloud.google.com/go/firestore"
 
 type CursorOptions struct {
 	NovelID string              `json:"novel_id"`
-	Cursor  string              `json:"cursor"`
+	Cursor  int                 `json:"cursor"`
 	Limit   int                 `json:"limit"`
 	SortBy  firestore.Direction `json:"sort_by"`
 }
 
 type CursorResponse struct {
-	Chapters   []Chapter `json:"chapters"`
-	NextCursor string    `json:"next_cursor"`
+	Chapters   []FrontendChapter `json:"chapters"`
+	NextCursor int               `json:"next_cursor"`
 }
 
 // Chapter struct used on backend
