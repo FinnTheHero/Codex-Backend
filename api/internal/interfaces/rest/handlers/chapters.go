@@ -6,7 +6,6 @@ import (
 	firestore_services "Codex-Backend/api/internal/usecases/collections"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
@@ -26,20 +25,16 @@ func GetPaginatedChapters(c *gin.Context) {
 
 	options := domain.CursorOptions{
 		NovelID: novelId,
-		Cursor:  "",
+		Cursor:  0,
 		Limit:   100,
 		SortBy:  firestore.Desc,
 	}
 
 	if cursor, exists := c.GetQuery("cursor"); exists {
-		split := strings.Split(cursor, "_")
-		if len(split) != 2 || split[0] != "chapter" {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-				"error": "Invalid cursor format",
-			})
-			return
+		curs, err := strconv.Atoi(cursor)
+		if err == nil {
+			options.Cursor = curs
 		}
-		options.Cursor = cursor
 	}
 
 	if limit, exists := c.GetQuery("limit"); exists {
