@@ -7,9 +7,124 @@ import (
 	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"context"
 	"errors"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"strings"
 	"time"
+
+	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/timsims/pamphlet"
 )
+
+// Remove HTML tags and convert the body to Markdown
+func cleanHtml(input string) (string, error) {
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(input))
+	if err != nil {
+		return "", err
+	}
+
+	doc.Find("head, script, style, nav").Remove()
+
+	html, err := doc.Find("body").Html()
+	if err != nil {
+		return "", err
+	}
+
+	return htmltomarkdown.ConvertString(html)
+}
+
+func CreateNovelFromEPUB(epubFile *multipart.FileHeader, ctx context.Context) error {
+	multipartFIle, err := epubFile.Open()
+	if err != nil {
+		return err
+	}
+	defer multipartFIle.Close()
+
+	data, err := io.ReadAll(multipartFIle)
+	if err != nil {
+		return err
+	}
+
+	parser, err := pamphlet.OpenBytes(data)
+	if err != nil {
+		return err
+	}
+	defer parser.Close()
+
+	book := parser.GetBook()
+
+	// Create Novel
+
+	id, err := cmn.GenerateID("novel")
+	if err != nil {
+		return err
+	}
+
+	description, err := cleanHtml(book.Description)
+	if err != nil {
+		return err
+	}
+
+	novel := &domain.Novel{
+		ID:          id,
+		Title:       book.Title,
+		Author:      book.Author,
+		Description: description,
+		CreatedAt:   cmn.TimeStamp(book.Date),
+		UpdatedAt:   cmn.TimeStamp(""),
+		Deleted:     false,
+	}
+
+	err, id = CreateNovel(*novel, ctx)
+	if err != nil {
+		return err
+	}
+
+	// Create chapters
+
+	rawChapters := book.Chapters
+
+	c_id, err := cmn.GenerateID("chapter")
+	if err != nil {
+		return err
+	}
+
+	chapters := make([]domain.Chapter, len(rawChapters))
+	for i, chapter := range rawChapters {
+		rawContent, err := chapter.GetContent()
+		if err != nil {
+			return err
+		}
+
+		content, err := cleanHtml(rawContent)
+		if err != nil {
+			return err
+		}
+
+		chapter := &domain.Chapter{
+			ID:          c_id,
+			Title:       chapter.Title,
+			Author:      book.Author,
+			Description: "",
+			CreatedAt:   cmn.TimeStamp(""),
+			UpdatedAt:   cmn.TimeStamp(""),
+			Content:     content,
+			Index:       i,
+			Deleted:     false,
+		}
+
+		chapters[i] = *chapter
+	}
+
+	err = BatchUploadChapters(id, chapters, ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func CreateNovel(novel domain.Novel, ctx context.Context) (error, string) {
 	client, err := firestore_client.FirestoreClient()
