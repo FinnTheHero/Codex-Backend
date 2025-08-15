@@ -16,13 +16,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const Limit = 100
-
 func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
 	coll := c.Client.Collection("novels").Doc(options.NovelID).Collection("chapters")
 	query := coll.OrderBy(firestore.DocumentID, options.SortBy)
 
-	limit := min(max(options.Limit, 1), Limit)
+	limit := min(max(options.Limit, 1), 100)
 
 	if options.Cursor == "" {
 		snaps, err := query.Limit(limit + 1).Documents(ctx).GetAll()
@@ -97,7 +95,10 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 	for i := 0; i < len(chapters); i += chunkSize {
 		subset := chapters[i:min(i+chunkSize, len(chapters))]
 
-		bw := c.Client.BulkWriter(ctx)
+		batchCtx, cancel := context.WithTimeout(ctx, 300*time.Second)
+		defer cancel()
+
+		bw := c.Client.BulkWriter(batchCtx)
 		jobs := make([]*firestore.BulkWriterJob, 0, len(subset))
 
 		for _, chap := range subset {
@@ -124,6 +125,8 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 				}
 			}
 		}
+
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	return nil
