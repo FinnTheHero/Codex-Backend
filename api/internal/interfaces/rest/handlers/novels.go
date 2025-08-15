@@ -10,6 +10,42 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func EPUBNovel(c *gin.Context) {
+	ctx := c.Request.Context()
+	defer ctx.Done()
+
+	defer func() {
+		if c.Request.MultipartForm != nil {
+			c.Request.MultipartForm.RemoveAll()
+		}
+	}()
+
+	epubFile, err := c.FormFile("file")
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to get EPUB file: " + err.Error(),
+		})
+		return
+	}
+
+	err = firestore_services.CreateNovelFromEPUB(epubFile, ctx)
+	if e, ok := err.(*cmn.Error); ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to upload EPUB file: " + e.Error(),
+		})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to upload EPUB file: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "EPUB file uploaded successfully",
+	})
+}
+
 func FindNovel(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()

@@ -39,6 +39,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	}))
 
 	r.Use(firestore_middleware.RateLimiter())
+	r.MaxMultipartMemory = 32 << 20 // 32 MB
 
 	client := r.Group("/")
 	{
@@ -53,7 +54,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	{
 		manage.POST("/novel", firestore_middleware.ValidateToken(), firestore_handlers.CreateNovel)
 		manage.POST("/:novel/chapter", firestore_middleware.ValidateToken(), firestore_handlers.CreateChapter)
-		manage.POST("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.BatchUploadChapters)
+		manage.POST("/epub", firestore_middleware.ValidateToken(), firestore_handlers.EPUBNovel)
 		manage.PUT("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.UpdateNovel)
 		manage.PUT("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.UpdateChapter)
 		manage.DELETE("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.DeleteNovel)
