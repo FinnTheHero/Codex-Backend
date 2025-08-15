@@ -8,7 +8,6 @@ type Novel struct {
 	Description string `json:"description"`
 	CreatedAt   string `json:"creation_date"`
 	UpdatedAt   string `json:"update_date"`
-	Index       int    `json:"index"`
 	Deleted     bool   `json:"deleted"`
 }
 
