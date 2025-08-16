@@ -9,7 +9,6 @@ require (
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/JohannesKaufmann/html-to-markdown/v2 v2.3.3
 	github.com/PuerkitoBio/goquery v1.10.3
-	github.com/fvbommel/sortorder v1.1.0
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
