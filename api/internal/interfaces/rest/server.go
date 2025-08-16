@@ -1,11 +1,18 @@
 package firestore_server
 
 import (
+	cmn "Codex-Backend/api/internal/common"
+
 	"github.com/gin-gonic/gin"
 )
 
 func Server() {
-	gin.SetMode(os.Getenv("GIN_MODE"))
+	mode, err := cmn.GetEnvVariable("GIN_MODE")
+	if err != nil {
+		panic(err)
+	}
+
+	gin.SetMode(mode)
 
 	r := gin.Default()
 
