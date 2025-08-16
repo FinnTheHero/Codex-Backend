@@ -5,7 +5,7 @@ import (
 )
 
 func Server() {
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(os.Getenv("GIN_MODE"))
 
 	r := gin.Default()
 
