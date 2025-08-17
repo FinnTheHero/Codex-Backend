@@ -7,10 +7,7 @@ import (
 )
 
 func Server() {
-	mode, err := cmn.GetEnvVariable("GIN_MODE")
-	if err != nil {
-		panic(err)
-	}
+	mode := cmn.GetEnvVariable("GIN_MODE")
 
 	gin.SetMode(mode)
 

@@ -10,10 +10,7 @@ import (
 )
 
 func RegisteredRoutes(r *gin.Engine) {
-	domain, err := cmn.GetEnvVariable("DOMAIN")
-	if err != nil {
-		panic(err)
-	}
+	domain := cmn.GetEnvVariable("DOMAIN")
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
