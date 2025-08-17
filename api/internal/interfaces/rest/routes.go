@@ -1,6 +1,7 @@
 package firestore_server
 
 import (
+	cmn "Codex-Backend/api/internal/common"
 	firestore_handlers "Codex-Backend/api/internal/interfaces/rest/handlers"
 	firestore_middleware "Codex-Backend/api/internal/interfaces/rest/middleware"
 
@@ -9,11 +10,20 @@ import (
 )
 
 func RegisteredRoutes(r *gin.Engine) {
+	debug_domain, err := cmn.GetEnvVariable("DEBUG_DOMAIN")
+	if err != nil {
+		debug_domain = "http://localhost:3000"
+	}
+
+	release_domain, err := cmn.GetEnvVariable("RELEASE_DOMAIN")
+	if err != nil {
+		release_domain = "https://codex-reader.vercel.app"
+	}
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			"http://localhost:3000",           // Local
-			"https://codex-reader.vercel.app", // Remote TODO: change this to include url from env later.
+			debug_domain,   // Local
+			release_domain, // Remote TODO: change this to include url from env later.
 		},
 		AllowMethods: []string{
 			"GET",
