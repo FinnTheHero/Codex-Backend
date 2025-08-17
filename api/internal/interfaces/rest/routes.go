@@ -10,20 +10,14 @@ import (
 )
 
 func RegisteredRoutes(r *gin.Engine) {
-	debug_domain, err := cmn.GetEnvVariable("DEBUG_DOMAIN")
+	domain, err := cmn.GetEnvVariable("DOMAIN")
 	if err != nil {
-		debug_domain = "http://localhost:3000"
-	}
-
-	release_domain, err := cmn.GetEnvVariable("RELEASE_DOMAIN")
-	if err != nil {
-		release_domain = "https://codex-reader.vercel.app"
+		panic(err)
 	}
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			debug_domain,   // Local
-			release_domain, // Remote TODO: change this to include url from env later.
+			domain,
 		},
 		AllowMethods: []string{
 			"GET",
