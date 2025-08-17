@@ -31,11 +31,16 @@ func RegisteredRoutes(r *gin.Engine) {
 			"X-Requested-With",
 			"Authorization",
 			"Accept",
-			"Acces-Control-Allow-Origin",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Credentials",
+			"Set-Cookie",
 		},
 		ExposeHeaders: []string{
 			"Content-Length",
 			"Content-Type",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Credentials",
+			"Set-Cookie",
 		},
 		AllowCredentials: true,
 	}))

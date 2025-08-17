@@ -80,7 +80,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("Authorization", token, 3600*24, "", "", true, true)
+	c.SetCookie("Authorization", token, 3600*24, "/", cmn.GetEnvVariable("DOMAIN"), true, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"user": gin.H{
