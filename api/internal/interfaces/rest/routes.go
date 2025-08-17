@@ -38,6 +38,7 @@ func RegisteredRoutes(r *gin.Engine) {
 		},
 		ExposeHeaders: []string{
 			"Content-Length",
+			"Content-Type",
 		},
 		AllowCredentials: true,
 	}))
