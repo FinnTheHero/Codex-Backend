@@ -21,30 +21,16 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 	limit := min(max(options.Limit, 1), 100)
 
 	snapshots := []*firestore.DocumentSnapshot{}
+	var err error
 
 	if options.Cursor == 0 {
-		snaps, err := query.Limit(1).Documents(ctx).GetAll()
-		if err != nil {
-			return nil, err
-		}
-
-		if len(snaps) == 0 {
-			return nil, &cmn.Error{
-				Err:    fmt.Errorf("Firestore Client Error - Get Paginated Chapters - No Chapters Found for Novel: %s", options.NovelID),
-				Status: http.StatusNotFound,
-			}
-		}
-
-		snapshots, err = query.StartAt(snaps[0]).Limit(limit + 1).Documents(ctx).GetAll()
-		if err != nil {
-			return nil, err
-		}
+		snapshots, err = query.Limit(limit + 1).Documents(ctx).GetAll()
 	} else {
-		var err error
 		snapshots, err = query.StartAt(options.Cursor).Limit(limit + 1).Documents(ctx).GetAll()
-		if err != nil {
-			return nil, err
-		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	if len(snapshots) == 0 {
@@ -54,22 +40,10 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 		}
 	}
 
-	nextCursor := 0
-	if len(snapshots) > limit {
-		var chapter domain.Chapter
-		if err := snapshots[len(snapshots)-1].DataTo(&chapter); err != nil {
-			return nil, err
-		}
-		nextCursor = chapter.Index
-	}
+	actualLimit := min(len(snapshots), limit)
+	chapters := make([]domain.FrontendChapter, 0, actualLimit)
 
-	snapLen := len(snapshots) - 1
-	if snapLen <= 0 {
-		snapLen++
-	}
-
-	chapters := []domain.FrontendChapter{}
-	for _, snapshot := range snapshots[:snapLen] {
+	for _, snapshot := range snapshots[:actualLimit] {
 		var chapter domain.Chapter
 		if err := snapshot.DataTo(&chapter); err != nil {
 			return nil, err
@@ -80,6 +54,15 @@ func (c *Client) CursorPagination(options domain.CursorOptions, ctx context.Cont
 			UpdatedAt: chapter.UpdatedAt,
 			Content:   chapter.Content,
 		})
+	}
+
+	nextCursor := 0
+	if len(snapshots) > limit {
+		var lastChapter domain.Chapter
+		if err := snapshots[limit].DataTo(&lastChapter); err != nil {
+			return nil, err
+		}
+		nextCursor = lastChapter.Index
 	}
 
 	return &domain.CursorResponse{
