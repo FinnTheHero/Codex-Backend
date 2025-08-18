@@ -9,22 +9,25 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
-	"github.com/riverqueue/river/rivershared/util/slogutil"
 )
 
-func InitializeRiverClient(ctx context.Context) *river.Client[pgx.Tx] {
+func InitializeRiverClient(ctx context.Context, workers *river.Workers) *river.Client[pgx.Tx] {
 	dbPool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		panic(err)
 	}
 
-	workers := river.NewWorkers()
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+
 	riverClient, err := river.NewClient(riverpgxv5.New(dbPool), &river.Config{
-		Logger: slog.New(&slogutil.SlogMessageOnlyHandler{Level: slog.LevelWarn}),
+		Logger: logger,
 		Queues: map[string]river.QueueConfig{
-			river.QueueDefault: {MaxWorkers: 100},
+			river.QueueDefault: {MaxWorkers: 10},
 		},
-		Workers: workers,
+		MaxAttempts: 3,
+		Workers:     workers,
 	})
 	if err != nil {
 		panic(err)
