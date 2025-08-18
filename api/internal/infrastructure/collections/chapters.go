@@ -95,7 +95,7 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 	for i := 0; i < len(chapters); i += chunkSize {
 		subset := chapters[i:min(i+chunkSize, len(chapters))]
 
-		batchCtx, cancel := context.WithTimeout(ctx, 300*time.Second)
+		batchCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 
 		bw := c.Client.BulkWriter(batchCtx)
@@ -104,6 +104,7 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 		for _, chap := range subset {
 			job, err := bw.Set(coll.Doc(chap.ID), chap)
 			if err != nil {
+				cancel()
 				return &cmn.Error{
 					Err:    fmt.Errorf("Firestore Client Error - Batch Upload Chapters - Enqueue failed for chapter %s: %w", chap.ID, err),
 					Status: http.StatusInternalServerError,
@@ -119,6 +120,7 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 		for j, job := range jobs {
 			if _, err := job.Results(); err != nil {
 				chap := subset[j]
+				cancel()
 				return &cmn.Error{
 					Err:    fmt.Errorf("Firestore Client Error - Batch Upload Chapters - Write failed for chapter %s: %w", chap.ID, err),
 					Status: http.StatusInternalServerError,
@@ -126,7 +128,10 @@ func (c *Client) BatchUploadChapters(novelId string, chapters []domain.Chapter, 
 			}
 		}
 
-		time.Sleep(100 * time.Millisecond)
+		cancel()
+		if i+chunkSize < len(chapters) {
+			time.Sleep(200 * time.Millisecond)
+		}
 	}
 
 	return nil
