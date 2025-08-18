@@ -12,7 +12,7 @@ import (
 	"github.com/riverqueue/river/rivershared/util/slogutil"
 )
 
-func initializeRiverClient(ctx context.Context) *river.Client[pgx.Tx] {
+func InitializeRiverClient(ctx context.Context) *river.Client[pgx.Tx] {
 	dbPool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
 		panic(err)
