@@ -25,7 +25,7 @@ func cleanHtml(input string) (string, error) {
 		return "", err
 	}
 
-	doc.Find("head, script, style, nav").Remove()
+	doc.Find("head, script, style, nav, a, img, code, pre").Remove()
 
 	html, err := doc.Find("body").Html()
 	if err != nil {
