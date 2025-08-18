@@ -4,6 +4,7 @@ import (
 	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	firestore_services "Codex-Backend/api/internal/usecases/collections"
+	"Codex-Backend/api/internal/usecases/worker"
 	"net/http"
 	"strings"
 
@@ -28,18 +29,25 @@ func EPUBNovel(c *gin.Context) {
 		return
 	}
 
-	err = firestore_services.CreateNovelFromEPUB(epubFile, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
-			"error": "Failed to upload EPUB file: " + e.Error(),
-		})
-		return
-	} else if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to upload EPUB file: " + err.Error(),
-		})
+	riverClient := cmn.InitializeRiverClient(ctx)
+	_, err = riverClient.Insert(ctx, worker.ProcessEPUBArgs{File: epubFile}, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// err = firestore_services.CreateNovelFromEPUB(epubFile, ctx)
+	// if e, ok := err.(*cmn.Error); ok {
+	// 	c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+	// 		"error": "Failed to upload EPUB file: " + e.Error(),
+	// 	})
+	// 	return
+	// } else if err != nil {
+	// 	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+	// 		"error": "Failed to upload EPUB file: " + err.Error(),
+	// 	})
+	// 	return
+	// }
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "EPUB file uploaded successfully",
