@@ -49,6 +49,4 @@ func main() {
 	} else {
 		log.Println("River worker stopped gracefully")
 	}
-
-	select {}
 }
