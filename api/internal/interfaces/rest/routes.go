@@ -11,7 +11,7 @@ import (
 
 func RegisteredRoutes(r *gin.Engine) {
 	domain := cmn.GetEnvVariable("DOMAIN")
-	if gin.Mode() == gin.DebugMode || domain == "" {
+	if gin.Mode() == gin.DebugMode && domain == "" {
 		domain = "*"
 	}
 
