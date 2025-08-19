@@ -13,13 +13,13 @@ air config is outdated and not recommended. use [Run](Run guide instead)
 ## Run
 run server:
 
-    ```bash
-    go run api/cmd/web/main.go
-    ```
+```bash
+go run api/cmd/web/main.go
+```
 
-    ```bash
-    go run api/cmd/worker/main.go
-    ```
+```bash
+go run api/cmd/worker/main.go
+```
 
 Both are needed
 
