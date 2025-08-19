@@ -11,6 +11,9 @@ import (
 
 func RegisteredRoutes(r *gin.Engine) {
 	domain := cmn.GetEnvVariable("DOMAIN")
+	if gin.Mode() == gin.DebugMode || domain == "" {
+		domain = "*"
+	}
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
