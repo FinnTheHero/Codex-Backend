@@ -62,11 +62,16 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	manage := r.Group("/manage")
 	{
+		// Create
 		manage.POST("/novel", firestore_middleware.ValidateToken(), firestore_handlers.CreateNovel)
 		manage.POST("/:novel/chapter", firestore_middleware.ValidateToken(), firestore_handlers.CreateChapter)
 		manage.POST("/epub", firestore_middleware.ValidateToken(), firestore_handlers.EPUBNovel)
+
+		// Update
 		manage.PUT("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.UpdateNovel)
 		manage.PUT("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.UpdateChapter)
+
+		// Delete
 		manage.DELETE("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.DeleteNovel)
 		manage.DELETE("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.DeleteChapter)
 	}
