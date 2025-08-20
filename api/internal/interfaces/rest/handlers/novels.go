@@ -2,6 +2,7 @@ package firestore_handlers
 
 import (
 	cmn "Codex-Backend/api/internal/common"
+	queue "Codex-Backend/api/internal/common/river"
 	"Codex-Backend/api/internal/domain"
 	firestore_services "Codex-Backend/api/internal/usecases/collections"
 	"Codex-Backend/api/internal/usecases/worker"
@@ -10,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/riverqueue/river"
 )
 
 func EPUBNovel(c *gin.Context) {
@@ -52,9 +52,7 @@ func EPUBNovel(c *gin.Context) {
 		return
 	}
 
-	workers := river.NewWorkers()
-	river.AddWorker(workers, &worker.EPUBWorker{})
-	riverClient := cmn.InitializeRiverClient(ctx, workers)
+	riverClient := queue.GetRiverClient(ctx)
 	_, err = riverClient.Insert(ctx, worker.ProcessEPUBArgs{File: fileData}, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

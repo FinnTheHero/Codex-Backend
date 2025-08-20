@@ -2,15 +2,13 @@ package main
 
 import (
 	cmn "Codex-Backend/api/internal/common"
-	"Codex-Backend/api/internal/usecases/worker"
+	queue "Codex-Backend/api/internal/common/river"
 	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/riverqueue/river"
 )
 
 func init() {
@@ -23,10 +21,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	workers := river.NewWorkers()
-	river.AddWorker(workers, &worker.EPUBWorker{})
-
-	riverClient := cmn.InitializeRiverClient(ctx, workers)
+	riverClient := queue.GetRiverClient(ctx)
 	if err := riverClient.Start(ctx); err != nil {
 		log.Fatal("Failed to start River client:", err)
 	}
