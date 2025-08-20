@@ -1,6 +1,7 @@
 package firestore_server
 
 import (
+	cmn "Codex-Backend/api/internal/common"
 	firestore_handlers "Codex-Backend/api/internal/interfaces/rest/handlers"
 	firestore_middleware "Codex-Backend/api/internal/interfaces/rest/middleware"
 
@@ -9,11 +10,14 @@ import (
 )
 
 func RegisteredRoutes(r *gin.Engine) {
+	domain := cmn.GetEnvVariable("DOMAIN")
+	if gin.Mode() == gin.DebugMode && domain == "" {
+		domain = "*"
+	}
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			"http://localhost:3000",           // Local
-			"https://codex-reader.vercel.app", // Remote TODO: change this to include url from env later.
+			domain,
 		},
 		AllowMethods: []string{
 			"GET",
@@ -30,10 +34,16 @@ func RegisteredRoutes(r *gin.Engine) {
 			"X-Requested-With",
 			"Authorization",
 			"Accept",
-			"Acces-Control-Allow-Origin",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Credentials",
+			"Set-Cookie",
 		},
 		ExposeHeaders: []string{
 			"Content-Length",
+			"Content-Type",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Credentials",
+			"Set-Cookie",
 		},
 		AllowCredentials: true,
 	}))
@@ -52,11 +62,16 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	manage := r.Group("/manage")
 	{
+		// Create
 		manage.POST("/novel", firestore_middleware.ValidateToken(), firestore_handlers.CreateNovel)
 		manage.POST("/:novel/chapter", firestore_middleware.ValidateToken(), firestore_handlers.CreateChapter)
 		manage.POST("/epub", firestore_middleware.ValidateToken(), firestore_handlers.EPUBNovel)
+
+		// Update
 		manage.PUT("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.UpdateNovel)
 		manage.PUT("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.UpdateChapter)
+
+		// Delete
 		manage.DELETE("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.DeleteNovel)
 		manage.DELETE("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.DeleteChapter)
 	}

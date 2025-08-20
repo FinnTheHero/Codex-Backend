@@ -2,8 +2,11 @@ package firestore_handlers
 
 import (
 	cmn "Codex-Backend/api/internal/common"
+	queue "Codex-Backend/api/internal/common/river"
 	"Codex-Backend/api/internal/domain"
 	firestore_services "Codex-Backend/api/internal/usecases/collections"
+	"Codex-Backend/api/internal/usecases/worker"
+	"io"
 	"net/http"
 	"strings"
 
@@ -28,16 +31,31 @@ func EPUBNovel(c *gin.Context) {
 		return
 	}
 
-	err = firestore_services.CreateNovelFromEPUB(epubFile, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
-			"error": "Failed to upload EPUB file: " + e.Error(),
+	maxSize := int64(32 * 1024 * 1024) // 32MB limit
+	if epubFile.Size > maxSize {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File too large (max 32MB)"})
+		return
+	}
+
+	file, err := epubFile.Open()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to open EPUB file: " + err.Error(),
 		})
 		return
-	} else if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to upload EPUB file: " + err.Error(),
-		})
+	}
+	defer file.Close()
+
+	fileData, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
+		return
+	}
+
+	riverClient := queue.GetRiverClient(ctx)
+	_, err = riverClient.Insert(ctx, worker.ProcessEPUBArgs{File: fileData}, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

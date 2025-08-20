@@ -41,30 +41,14 @@ func BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.
 
 	c := firestore_collections.Client{Client: client}
 
-	final := []domain.Chapter{}
-
-	for _, chapter := range chapters {
-		id, err := cmn.GenerateID("chapter")
-		if err != nil {
-			return err
-		}
-
-		chapter.ID = id
-		chapter.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
-		chapter.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
-		chapter.Deleted = false
-
-		final = append(final, chapter)
-	}
-
-	if len(final) == 0 {
+	if len(chapters) == 0 {
 		return &cmn.Error{
 			Err:    errors.New("Nothing to upload"),
 			Status: http.StatusInternalServerError,
 		}
 	}
 
-	err = c.BatchUploadChapters(novelId, final, ctx)
+	err = c.BatchUploadChapters(novelId, chapters, ctx)
 	if err != nil {
 		return err
 	}

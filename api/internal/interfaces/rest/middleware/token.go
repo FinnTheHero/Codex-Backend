@@ -2,6 +2,7 @@ package firestore_middleware
 
 import (
 	"Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	firestore_client "Codex-Backend/api/internal/infrastructure/client"
 	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
@@ -29,10 +30,7 @@ func ValidateToken() gin.HandlerFunc {
 				return nil, jwt.ErrSignatureInvalid
 			}
 
-			key, err := common.GetEnvVariable("JWT_SIGN_KEY")
-			if err != nil {
-				return nil, err
-			}
+			key := cmn.GetEnvVariable("JWT_SIGN_KEY")
 			return []byte(key), nil
 		})
 
