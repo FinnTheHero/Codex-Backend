@@ -10,9 +10,9 @@ import (
 )
 
 func RegisteredRoutes(r *gin.Engine) {
-	domain, err := cmn.GetEnvVariable("DOMAIN")
-	if err != nil {
-		panic(err)
+	domain := cmn.GetEnvVariable("DOMAIN")
+	if gin.Mode() == gin.DebugMode && domain == "" {
+		domain = "*"
 	}
 
 	r.Use(cors.New(cors.Config{
@@ -34,11 +34,16 @@ func RegisteredRoutes(r *gin.Engine) {
 			"X-Requested-With",
 			"Authorization",
 			"Accept",
-			"Acces-Control-Allow-Origin",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Credentials",
+			"Set-Cookie",
 		},
 		ExposeHeaders: []string{
 			"Content-Length",
 			"Content-Type",
+			"Access-Control-Allow-Origin",
+			"Access-Control-Allow-Credentials",
+			"Set-Cookie",
 		},
 		AllowCredentials: true,
 	}))

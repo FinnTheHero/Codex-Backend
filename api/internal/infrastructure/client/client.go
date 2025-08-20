@@ -18,10 +18,7 @@ type Client struct {
 func FirestoreClient() (*firestore.Client, error) {
 	ctx := context.Background()
 
-	credentials_json, err := cmn.GetEnvVariable("GOOGLE_CREDENTIALS")
-	if err != nil {
-		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - GOOGLE_CREDENTIALS: " + err.Error()), Status: http.StatusInternalServerError}
-	}
+	credentials_json := cmn.GetEnvVariable("GOOGLE_CREDENTIALS")
 
 	sa := option.WithCredentialsJSON([]byte(credentials_json))
 

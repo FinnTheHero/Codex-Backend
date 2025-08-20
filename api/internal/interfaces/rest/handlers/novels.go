@@ -4,10 +4,13 @@ import (
 	cmn "Codex-Backend/api/internal/common"
 	"Codex-Backend/api/internal/domain"
 	firestore_services "Codex-Backend/api/internal/usecases/collections"
+	"Codex-Backend/api/internal/usecases/worker"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/riverqueue/river"
 )
 
 func EPUBNovel(c *gin.Context) {
@@ -28,18 +31,48 @@ func EPUBNovel(c *gin.Context) {
 		return
 	}
 
-	err = firestore_services.CreateNovelFromEPUB(epubFile, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
-			"error": "Failed to upload EPUB file: " + e.Error(),
-		})
+	maxSize := int64(32 * 1024 * 1024) // 32MB limit
+	if epubFile.Size > maxSize {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File too large (max 32MB)"})
 		return
-	} else if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to upload EPUB file: " + err.Error(),
+	}
+
+	file, err := epubFile.Open()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to open EPUB file: " + err.Error(),
 		})
 		return
 	}
+	defer file.Close()
+
+	fileData, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read file"})
+		return
+	}
+
+	workers := river.NewWorkers()
+	river.AddWorker(workers, &worker.EPUBWorker{})
+	riverClient := cmn.InitializeRiverClient(ctx, workers)
+	_, err = riverClient.Insert(ctx, worker.ProcessEPUBArgs{File: fileData}, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// err = firestore_services.CreateNovelFromEPUB(epubFile, ctx)
+	// if e, ok := err.(*cmn.Error); ok {
+	// 	c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+	// 		"error": "Failed to upload EPUB file: " + e.Error(),
+	// 	})
+	// 	return
+	// } else if err != nil {
+	// 	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+	// 		"error": "Failed to upload EPUB file: " + err.Error(),
+	// 	})
+	// 	return
+	// }
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "EPUB file uploaded successfully",

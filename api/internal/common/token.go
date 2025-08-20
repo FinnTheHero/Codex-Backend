@@ -10,10 +10,7 @@ import (
 
 func GenerateToken(email string) (string, error) {
 
-	key, err := GetEnvVariable("JWT_SIGN_KEY")
-	if err != nil {
-		return "", err
-	}
+	key := GetEnvVariable("JWT_SIGN_KEY")
 	signKey := []byte(key)
 
 	expirationTime := time.Now().Add(time.Hour * 24)

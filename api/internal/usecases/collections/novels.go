@@ -7,8 +7,6 @@ import (
 	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"context"
 	"errors"
-	"io"
-	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -25,7 +23,7 @@ func cleanHtml(input string) (string, error) {
 		return "", err
 	}
 
-	doc.Find("head, script, style, nav").Remove()
+	doc.Find("head, script, style, nav, a, img, code, pre").Remove()
 
 	html, err := doc.Find("body").Html()
 	if err != nil {
@@ -35,18 +33,7 @@ func cleanHtml(input string) (string, error) {
 	return htmltomarkdown.ConvertString(html)
 }
 
-func CreateNovelFromEPUB(epubFile *multipart.FileHeader, ctx context.Context) error {
-	multipartFIle, err := epubFile.Open()
-	if err != nil {
-		return err
-	}
-	defer multipartFIle.Close()
-
-	data, err := io.ReadAll(multipartFIle)
-	if err != nil {
-		return err
-	}
-
+func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 	parser, err := pamphlet.OpenBytes(data)
 	if err != nil {
 		return err
