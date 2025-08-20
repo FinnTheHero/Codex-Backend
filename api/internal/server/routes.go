@@ -52,6 +52,8 @@ func RegisteredRoutes(r *gin.Engine) {
 	r.Use(middleware.RateLimiter())
 	r.MaxMultipartMemory = 32 << 20 // 32 MB
 
+	token.InitIMTokenCache()
+
 	client := r.Group("/")
 	{
 		client.GET("/all", handler.FindAllNovels)
@@ -80,10 +82,10 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	user := r.Group("/user")
 	{
-		user.GET("/validate", token.AuthenticateOnly(), handler.ValidateToken)
+		user.GET("/validate", token.GlobalToken.AuthenticateAndLoadUser(), handler.ValidateToken)
 		user.POST("/login", handler.LoginUser)
 		user.POST("/logout", handler.LogoutUser)
 		user.POST("/register", handler.RegisterUser)
-		// user.GET("/refresh", firestore_middleware.AuthenticateOnly())
+		user.GET("/refresh", token.AuthenticateOnly())
 	}
 }

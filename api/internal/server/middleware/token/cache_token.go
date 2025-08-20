@@ -1,6 +1,7 @@
 package token
 
 import (
+	"Codex-Backend/api/internal/domain"
 	"sync"
 	"time"
 )
@@ -56,7 +57,7 @@ func (c *InMemoryCache) Delete(key string) {
 }
 
 func (c *InMemoryCache) cleanup() {
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
 	for range ticker.C {
@@ -69,4 +70,20 @@ func (c *InMemoryCache) cleanup() {
 		}
 		c.mu.Unlock()
 	}
+}
+
+type IMTokenCache struct {
+	cache domain.TokenCache
+}
+
+var GlobalToken *IMTokenCache
+
+func NewIMTokenCache(cache domain.TokenCache) *IMTokenCache {
+	return &IMTokenCache{
+		cache: cache,
+	}
+}
+
+func InitIMTokenCache() {
+	GlobalToken = NewIMTokenCache(NewInMemoryCache())
 }

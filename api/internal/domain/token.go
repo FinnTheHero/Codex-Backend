@@ -1,10 +1,18 @@
 package domain
 
 import (
-	"context"
 	"sync"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
+
+type Claims struct {
+	ID    string `json:"id"`
+	Email string `json:"email"`
+	Type  string `json:"type"`
+	jwt.RegisteredClaims
+}
 
 type TokenConfig struct {
 	SigningKey string
@@ -26,12 +34,6 @@ type TokenCache interface {
 	Get(key string) (any, bool)
 	Set(key string, value any, duration time.Duration)
 	Delete(key string)
-}
-
-// UserService interface for user operations
-type UserService interface {
-	GetUserByID(ctx context.Context, userID string) (*User, error)
-	IsUserActive(ctx context.Context, userID string) (bool, error)
 }
 
 // MiddlewareConfig holds configuration for the JWT middleware

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -37,6 +38,7 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 		c.Set("claims", claims)
 		c.Set("user_id", claims.ID)
 		c.Set("user_email", claims.Email)
+		c.Set("user_type", claims.Type)
 
 		// Skip user lookup if not needed (for performance)
 		if config.SkipUserLookup {
@@ -88,12 +90,12 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 // extractToken extracts JWT token from cookie or Authorization header
 func extractToken(c *gin.Context) (string, error) {
 	// Try cookie first
-	if tokenString, err := c.Cookie("Authorization"); err == nil && tokenString != "" {
+	if tokenString, err := c.Cookie("access_token"); err == nil && tokenString != "" {
 		return tokenString, nil
 	}
 
 	// Try Authorization header as fallback
-	authHeader := c.GetHeader("Authorization")
+	authHeader := c.GetHeader("access_token")
 	if authHeader == "" {
 		return "", fmt.Errorf("no authorization token provided")
 	}
@@ -109,16 +111,11 @@ func extractToken(c *gin.Context) (string, error) {
 // parseAndValidateJWT parses and validates the JWT token
 func parseAndValidateJWT(tokenString string) (*domain.Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &domain.Claims{}, func(token *jwt.Token) (any, error) {
-		// Validate signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		// Get signing key (consider using a key rotation system)
 		key := cmn.GetEnvVariable("JWT_SIGN_KEY")
-		if key == "" {
-			return nil, fmt.Errorf("JWT signing key not configured")
-		}
 		return []byte(key), nil
 	})
 
@@ -148,8 +145,13 @@ func AuthenticateOnly() gin.HandlerFunc {
 	})
 }
 
-func AuthenticateAndLoadUser() gin.HandlerFunc {
+type FirestoreUserService struct {
+	client *firestore.Client
+}
+
+func (mf *IMTokenCache) AuthenticateAndLoadUser() gin.HandlerFunc {
 	return ValidateToken(domain.MiddlewareConfig{
+		Cache:          mf.cache,
 		CacheDuration:  15 * time.Minute,
 		SkipUserLookup: false,
 	})
