@@ -3,6 +3,7 @@ package handler
 import (
 	cmn "Codex-Backend/api/common"
 	"Codex-Backend/api/internal/domain"
+	"Codex-Backend/api/internal/server/middleware/token"
 	"Codex-Backend/api/internal/service"
 	"net/http"
 
@@ -80,9 +81,9 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	config := cmn.DefaultTokenConfig()
+	config := token.DefaultTokenConfig()
 
-	tokens, err := cmn.GenerateTokenPair(user.ID, user.Email, config)
+	tokens, err := token.GenerateTokenPair(user.ID, user.Email, config)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": "Error logging in the user: " + err.Error(),
@@ -91,8 +92,8 @@ func LoginUser(c *gin.Context) {
 	}
 
 	c.SetSameSite(http.SameSiteStrictMode)
-	c.SetCookie("access_token", tokens.AccessToken, 15*60, "/", "", true, true)
-	c.SetCookie("refresh_token", tokens.RefreshToken, 7*24*3600, "/auth", "", true, true)
+	c.SetCookie("access_token", tokens.AccessToken, int(config.AccessTTL.Seconds()), "/", "", true, true)
+	c.SetCookie("refresh_token", tokens.RefreshToken, int(config.RefreshTTL.Seconds()), "/", "", true, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"user": gin.H{
