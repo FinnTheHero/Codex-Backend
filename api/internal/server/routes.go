@@ -54,6 +54,8 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	token.InitIMTokenCache()
 
+	r.Use(token.AuthenticateOnly(), token.GlobalToken.AutoRefreshTokenMiddleware())
+
 	client := r.Group("/")
 	{
 		client.GET("/all", handler.FindAllNovels)
@@ -82,10 +84,10 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	user := r.Group("/user")
 	{
-		user.GET("/validate", token.GlobalToken.AuthenticateAndLoadUser(), handler.ValidateToken)
+		user.GET("/validate", handler.ValidateToken)
 		user.POST("/login", handler.LoginUser)
 		user.POST("/logout", handler.LogoutUser)
 		user.POST("/register", handler.RegisterUser)
-		user.GET("/refresh", token.AuthenticateOnly())
+		user.GET("/refresh", handler.RefreshToken)
 	}
 }
