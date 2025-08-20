@@ -26,7 +26,7 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 		}
 
 		// Parse and validate JWT
-		claims, err := parseAndValidateJWT(tokenString)
+		claims, err := ParseAndValidateJWT(tokenString)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "Invalid token: " + err.Error(),
@@ -36,9 +36,6 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 
 		// Set claims in context (always available)
 		c.Set("claims", claims)
-		c.Set("user_id", claims.ID)
-		c.Set("user_email", claims.Email)
-		c.Set("user_type", claims.Type)
 
 		// Skip user lookup if not needed (for performance)
 		if config.SkipUserLookup {
@@ -109,7 +106,7 @@ func extractToken(c *gin.Context) (string, error) {
 }
 
 // parseAndValidateJWT parses and validates the JWT token
-func parseAndValidateJWT(tokenString string) (*domain.Claims, error) {
+func ParseAndValidateJWT(tokenString string) (*domain.Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &domain.Claims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -152,7 +149,7 @@ type FirestoreUserService struct {
 func (mf *IMTokenCache) AuthenticateAndLoadUser() gin.HandlerFunc {
 	return ValidateToken(domain.MiddlewareConfig{
 		Cache:          mf.cache,
-		CacheDuration:  15 * time.Minute,
+		CacheDuration:  1 * time.Hour,
 		SkipUserLookup: false,
 	})
 }

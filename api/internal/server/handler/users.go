@@ -128,32 +128,10 @@ func LogoutUser(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("Authorization", "", -1, "", "", true, true)
+	c.SetCookie("access_token", "", -1, "", "", true, true)
+	c.SetCookie("refresh_token", "", -1, "", "", true, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Logged out successfully",
-	})
-}
-
-func ValidateToken(c *gin.Context) {
-	result_claims, ok := c.Get("claims")
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-			"error": "User not found",
-		})
-		return
-	}
-
-	claims, ok := result_claims.(*domain.Claims)
-	if !ok {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid user structure",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"id":    claims.ID,
-		"email": claims.Email,
 	})
 }
