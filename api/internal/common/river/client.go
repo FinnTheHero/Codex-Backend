@@ -1,14 +1,22 @@
-package common
+package queue
 
 import (
+	"Codex-Backend/api/internal/usecases/worker"
 	"context"
+	"log"
 	"log/slog"
 	"os"
+	"sync"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+)
+
+var (
+	riverClient *river.Client[pgx.Tx]
+	riverOnce   sync.Once
 )
 
 func InitializeRiverClient(ctx context.Context, workers *river.Workers) *river.Client[pgx.Tx] {
@@ -32,6 +40,21 @@ func InitializeRiverClient(ctx context.Context, workers *river.Workers) *river.C
 	if err != nil {
 		panic(err)
 	}
+
+	return riverClient
+}
+
+func GetRiverClient(ctx context.Context) *river.Client[pgx.Tx] {
+	riverOnce.Do(func() {
+		log.Println("Initializing River client...")
+
+		workers := river.NewWorkers()
+		river.AddWorker(workers, &worker.EPUBWorker{})
+
+		riverClient = InitializeRiverClient(ctx, workers)
+
+		log.Println("River client initialized successfully")
+	})
 
 	return riverClient
 }
