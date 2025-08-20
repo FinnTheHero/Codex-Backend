@@ -1,8 +1,9 @@
-package firestore_middleware
+package token
 
 import (
 	cmn "Codex-Backend/api/common"
 	"Codex-Backend/api/internal/domain"
+	"Codex-Backend/api/internal/service"
 	"fmt"
 	"net/http"
 	"time"
@@ -43,7 +44,7 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 			return
 		}
 
-		// Optional: Check cache first
+		// Check cache first
 		var user *domain.User
 		cacheKey := fmt.Sprintf("user:%s", claims.ID)
 
@@ -57,7 +58,7 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 
 		// Fetch user if not in cache
 		if user == nil {
-			user, err = config.UserService.GetUserByID(c.Request.Context(), claims.ID)
+			user, err = service.GetUserByID(claims.ID, c.Request.Context())
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 					"error": "User verification failed",
@@ -147,10 +148,8 @@ func AuthenticateOnly() gin.HandlerFunc {
 	})
 }
 
-func AuthenticateAndLoadUser(userService domain.UserService, cache domain.TokenCache) gin.HandlerFunc {
+func AuthenticateAndLoadUser() gin.HandlerFunc {
 	return ValidateToken(domain.MiddlewareConfig{
-		UserService:    userService,
-		Cache:          cache,
 		CacheDuration:  15 * time.Minute,
 		SkipUserLookup: false,
 	})

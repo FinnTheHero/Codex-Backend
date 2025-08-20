@@ -1,4 +1,4 @@
-package firestore_server
+package server
 
 import (
 	cmn "Codex-Backend/api/common"

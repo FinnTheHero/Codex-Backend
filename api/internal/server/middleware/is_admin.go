@@ -1,4 +1,4 @@
-package firestore_middleware
+package middleware
 
 import (
 	"Codex-Backend/api/internal/domain"

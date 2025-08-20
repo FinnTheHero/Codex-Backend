@@ -1,9 +1,9 @@
-package firestore_handlers
+package handler
 
 import (
 	cmn "Codex-Backend/api/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_services "Codex-Backend/api/internal/services/collections"
+	"Codex-Backend/api/internal/service"
 	"net/http"
 	"strconv"
 
@@ -55,7 +55,7 @@ func GetPaginatedChapters(c *gin.Context) {
 		}
 	}
 
-	response, err := firestore_services.GetCursorPaginatedChapters(options, ctx)
+	response, err := service.GetCursorPaginatedChapters(options, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapters: " + e.Error(),
@@ -88,7 +88,7 @@ func FindChapter(c *gin.Context) {
 		return
 	}
 
-	chapter, err := firestore_services.GetChapter(novelId, chapterId, ctx)
+	chapter, err := service.GetChapter(novelId, chapterId, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapter: " + e.Error(),
@@ -119,7 +119,7 @@ func FindAllChapters(c *gin.Context) {
 		return
 	}
 
-	chapters, err := firestore_services.GetAllChapters(novelId, ctx)
+	chapters, err := service.GetAllChapters(novelId, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapters: " + e.Error(),
@@ -152,7 +152,7 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	err := firestore_services.CreateChapter(novelId, chapter, ctx)
+	err := service.CreateChapter(novelId, chapter, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to create chapter: " + e.Error(),
@@ -185,7 +185,7 @@ func UpdateChapter(c *gin.Context) {
 		return
 	}
 
-	err := firestore_services.UpdateChapter(novelId, &chapter, ctx)
+	err := service.UpdateChapter(novelId, &chapter, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to update chapter: " + e.Error(),
@@ -210,7 +210,7 @@ func DeleteChapter(c *gin.Context) {
 	novelId := c.Param("novel")
 	chapterId := c.Param("chapter")
 
-	err := firestore_services.DeleteChapter(novelId, chapterId, ctx)
+	err := service.DeleteChapter(novelId, chapterId, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to delete chapter: " + e.Error(),

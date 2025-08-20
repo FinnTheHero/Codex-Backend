@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -35,8 +36,17 @@ type UserService interface {
 
 // MiddlewareConfig holds configuration for the JWT middleware
 type MiddlewareConfig struct {
-	UserService    UserService
 	Cache          TokenCache
 	CacheDuration  time.Duration
 	SkipUserLookup bool
+}
+
+type InMemoryCache struct {
+	mu    sync.RWMutex
+	items map[string]cacheItem
+}
+
+type cacheItem struct {
+	value     any
+	expiresAt time.Time
 }

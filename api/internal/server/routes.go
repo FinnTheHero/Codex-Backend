@@ -1,9 +1,10 @@
-package firestore_server
+package server
 
 import (
 	cmn "Codex-Backend/api/common"
-	firestore_handlers "Codex-Backend/api/internal/server/handlers"
-	firestore_middleware "Codex-Backend/api/internal/server/middleware"
+	"Codex-Backend/api/internal/server/handler"
+	"Codex-Backend/api/internal/server/middleware"
+	"Codex-Backend/api/internal/server/middleware/token"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -48,41 +49,41 @@ func RegisteredRoutes(r *gin.Engine) {
 		AllowCredentials: true,
 	}))
 
-	r.Use(firestore_middleware.RateLimiter())
+	r.Use(middleware.RateLimiter())
 	r.MaxMultipartMemory = 32 << 20 // 32 MB
 
 	client := r.Group("/")
 	{
-		client.GET("/all", firestore_handlers.FindAllNovels)
-		client.GET("/:novel", firestore_handlers.FindNovel)
-		client.GET("/:novel/all", firestore_handlers.FindAllChapters)
-		client.GET("/:novel/:chapter", firestore_handlers.FindChapter)
-		client.GET("/:novel/chapters", firestore_handlers.GetPaginatedChapters)
+		client.GET("/all", handler.FindAllNovels)
+		client.GET("/:novel", handler.FindNovel)
+		client.GET("/:novel/all", handler.FindAllChapters)
+		client.GET("/:novel/:chapter", handler.FindChapter)
+		client.GET("/:novel/chapters", handler.GetPaginatedChapters)
 	}
 
 	manage := r.Group("/manage")
 	{
 
 		// Create
-		manage.POST("/novel", firestore_middleware.AuthenticateOnly(), firestore_handlers.CreateNovel)
-		manage.POST("/:novel/chapter", firestore_middleware.AuthenticateOnly(), firestore_handlers.CreateChapter)
-		manage.POST("/epub", firestore_middleware.AuthenticateOnly(), firestore_handlers.EPUBNovel)
+		manage.POST("/novel", token.AuthenticateOnly(), handler.CreateNovel)
+		manage.POST("/:novel/chapter", token.AuthenticateOnly(), handler.CreateChapter)
+		manage.POST("/epub", token.AuthenticateOnly(), handler.EPUBNovel)
 
 		// Update
-		manage.PUT("/:novel", firestore_middleware.AuthenticateOnly(), firestore_handlers.UpdateNovel)
-		manage.PUT("/:novel/:chapter", firestore_middleware.AuthenticateOnly(), firestore_handlers.UpdateChapter)
+		manage.PUT("/:novel", token.AuthenticateOnly(), handler.UpdateNovel)
+		manage.PUT("/:novel/:chapter", token.AuthenticateOnly(), handler.UpdateChapter)
 
 		// Delete
-		manage.DELETE("/:novel", firestore_middleware.AuthenticateOnly(), firestore_handlers.DeleteNovel)
-		manage.DELETE("/:novel/:chapter", firestore_middleware.AuthenticateOnly(), firestore_handlers.DeleteChapter)
+		manage.DELETE("/:novel", token.AuthenticateOnly(), handler.DeleteNovel)
+		manage.DELETE("/:novel/:chapter", token.AuthenticateOnly(), handler.DeleteChapter)
 	}
 
 	user := r.Group("/user")
 	{
-		user.GET("/validate", firestore_middleware.AuthenticateOnly(), firestore_handlers.ValidateToken)
-		user.POST("/login", firestore_handlers.LoginUser)
-		user.POST("/logout", firestore_handlers.LogoutUser)
-		user.POST("/register", firestore_handlers.RegisterUser)
+		user.GET("/validate", token.AuthenticateOnly(), handler.ValidateToken)
+		user.POST("/login", handler.LoginUser)
+		user.POST("/logout", handler.LogoutUser)
+		user.POST("/register", handler.RegisterUser)
 		// user.GET("/refresh", firestore_middleware.AuthenticateOnly())
 	}
 }

@@ -1,9 +1,9 @@
-package firestore_handlers
+package handler
 
 import (
 	cmn "Codex-Backend/api/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_services "Codex-Backend/api/internal/services/collections"
+	"Codex-Backend/api/internal/service"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +29,7 @@ func RegisterUser(c *gin.Context) {
 		return
 	}
 
-	err := firestore_services.RegisterUser(user, ctx)
+	err := service.RegisterUser(user, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Error registering the user: " + e.Error(),
@@ -67,7 +67,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	user, err := firestore_services.LoginUser(credentials, ctx)
+	user, err := service.LoginUser(credentials, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Error logging in the user: " + e.Error(),
@@ -114,7 +114,7 @@ func LogoutUser(c *gin.Context) {
 		return
 	}
 
-	err = firestore_services.LogoutUser(tokenString)
+	err = service.LogoutUser(tokenString)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Error logging out the user: " + e.Error(),

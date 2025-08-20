@@ -1,7 +1,7 @@
 package worker
 
 import (
-	firestore_services "Codex-Backend/api/internal/services/collections"
+	"Codex-Backend/api/internal/service"
 	"context"
 
 	"github.com/riverqueue/river"
@@ -12,7 +12,7 @@ type EPUBWorker struct {
 }
 
 func (w *EPUBWorker) Work(ctx context.Context, job *river.Job[ProcessEPUBArgs]) error {
-	return firestore_services.CreateNovelFromEPUB(job.Args.File, ctx)
+	return service.CreateNovelFromEPUB(job.Args.File, ctx)
 }
 
 type ProcessEPUBArgs struct {

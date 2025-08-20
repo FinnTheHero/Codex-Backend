@@ -1,7 +1,7 @@
 package queue
 
 import (
-	"Codex-Backend/api/internal/services/worker"
+	"Codex-Backend/api/internal/service/worker"
 	"context"
 	"log"
 	"log/slog"
