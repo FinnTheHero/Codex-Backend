@@ -1,10 +1,10 @@
 package firestore_services
 
 import (
-	cmn "Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/common"
+	firestore_client "Codex-Backend/api/internal/database/client"
+	firestore_collections "Codex-Backend/api/internal/database/collections"
 	"Codex-Backend/api/internal/domain"
-	firestore_client "Codex-Backend/api/internal/infrastructure/client"
-	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"context"
 	"errors"
 	"net/http"

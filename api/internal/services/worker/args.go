@@ -1,7 +1,7 @@
 package worker
 
 import (
-	firestore_services "Codex-Backend/api/internal/usecases/collections"
+	firestore_services "Codex-Backend/api/internal/services/collections"
 	"context"
 
 	"github.com/riverqueue/river"

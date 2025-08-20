@@ -1,23 +1,23 @@
 package firestore_server
 
 import (
-	cmn "Codex-Backend/api/internal/common"
-	firestore_handlers "Codex-Backend/api/internal/interfaces/rest/handlers"
-	firestore_middleware "Codex-Backend/api/internal/interfaces/rest/middleware"
+	cmn "Codex-Backend/api/common"
+	firestore_handlers "Codex-Backend/api/internal/server/handlers"
+	firestore_middleware "Codex-Backend/api/internal/server/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func RegisteredRoutes(r *gin.Engine) {
-	domain := cmn.GetEnvVariable("DOMAIN")
-	if gin.Mode() == gin.DebugMode && domain == "" {
-		domain = "*"
+	domain_url := cmn.GetEnvVariable("DOMAIN")
+	if gin.Mode() == gin.DebugMode && domain_url == "" {
+		domain_url = "*"
 	}
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
-			domain,
+			domain_url,
 		},
 		AllowMethods: []string{
 			"GET",
@@ -62,25 +62,27 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	manage := r.Group("/manage")
 	{
+
 		// Create
-		manage.POST("/novel", firestore_middleware.ValidateToken(), firestore_handlers.CreateNovel)
-		manage.POST("/:novel/chapter", firestore_middleware.ValidateToken(), firestore_handlers.CreateChapter)
-		manage.POST("/epub", firestore_middleware.ValidateToken(), firestore_handlers.EPUBNovel)
+		manage.POST("/novel", firestore_middleware.AuthenticateOnly(), firestore_handlers.CreateNovel)
+		manage.POST("/:novel/chapter", firestore_middleware.AuthenticateOnly(), firestore_handlers.CreateChapter)
+		manage.POST("/epub", firestore_middleware.AuthenticateOnly(), firestore_handlers.EPUBNovel)
 
 		// Update
-		manage.PUT("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.UpdateNovel)
-		manage.PUT("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.UpdateChapter)
+		manage.PUT("/:novel", firestore_middleware.AuthenticateOnly(), firestore_handlers.UpdateNovel)
+		manage.PUT("/:novel/:chapter", firestore_middleware.AuthenticateOnly(), firestore_handlers.UpdateChapter)
 
 		// Delete
-		manage.DELETE("/:novel", firestore_middleware.ValidateToken(), firestore_handlers.DeleteNovel)
-		manage.DELETE("/:novel/:chapter", firestore_middleware.ValidateToken(), firestore_handlers.DeleteChapter)
+		manage.DELETE("/:novel", firestore_middleware.AuthenticateOnly(), firestore_handlers.DeleteNovel)
+		manage.DELETE("/:novel/:chapter", firestore_middleware.AuthenticateOnly(), firestore_handlers.DeleteChapter)
 	}
 
 	user := r.Group("/user")
 	{
-		user.GET("/validate", firestore_middleware.ValidateToken(), firestore_handlers.ValidateToken)
+		user.GET("/validate", firestore_middleware.AuthenticateOnly(), firestore_handlers.ValidateToken)
 		user.POST("/login", firestore_handlers.LoginUser)
 		user.POST("/logout", firestore_handlers.LogoutUser)
 		user.POST("/register", firestore_handlers.RegisterUser)
+		// user.GET("/refresh", firestore_middleware.AuthenticateOnly())
 	}
 }

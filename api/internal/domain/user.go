@@ -18,6 +18,7 @@ type Credentials struct {
 }
 
 type Claims struct {
+	ID    string `json:"id"`
 	Email string `json:"email"`
 	jwt.RegisteredClaims
 }

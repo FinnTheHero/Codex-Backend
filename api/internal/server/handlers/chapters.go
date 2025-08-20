@@ -1,9 +1,9 @@
 package firestore_handlers
 
 import (
-	cmn "Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_services "Codex-Backend/api/internal/usecases/collections"
+	firestore_services "Codex-Backend/api/internal/services/collections"
 	"net/http"
 	"strconv"
 

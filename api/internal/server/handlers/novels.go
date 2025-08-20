@@ -1,11 +1,11 @@
 package firestore_handlers
 
 import (
-	cmn "Codex-Backend/api/internal/common"
-	queue "Codex-Backend/api/internal/common/river"
+	cmn "Codex-Backend/api/common"
+	queue "Codex-Backend/api/common/river"
 	"Codex-Backend/api/internal/domain"
-	firestore_services "Codex-Backend/api/internal/usecases/collections"
-	"Codex-Backend/api/internal/usecases/worker"
+	firestore_services "Codex-Backend/api/internal/services/collections"
+	"Codex-Backend/api/internal/services/worker"
 	"io"
 	"net/http"
 	"strings"

@@ -1,7 +1,7 @@
 package firestore_server
 
 import (
-	cmn "Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/common"
 	"context"
 	"log"
 	"net/http"

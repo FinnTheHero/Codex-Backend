@@ -1,9 +1,9 @@
 package firestore_handlers
 
 import (
-	cmn "Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/common"
 	"Codex-Backend/api/internal/domain"
-	firestore_services "Codex-Backend/api/internal/usecases/collections"
+	firestore_services "Codex-Backend/api/internal/services/collections"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -67,7 +67,7 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	token, user, err := firestore_services.LoginUser(credentials, ctx)
+	user, err := firestore_services.LoginUser(credentials, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Error logging in the user: " + e.Error(),
@@ -80,15 +80,28 @@ func LoginUser(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("Authorization", token, 3600*24, "/", cmn.GetEnvVariable("DOMAIN"), true, true)
+	config := cmn.DefaultTokenConfig()
+
+	tokens, err := cmn.GenerateTokenPair(user.ID, user.Email, config)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Error logging in the user: " + err.Error(),
+		})
+		return
+	}
+
+	c.SetSameSite(http.SameSiteStrictMode)
+	c.SetCookie("access_token", tokens.AccessToken, 15*60, "/", "", true, true)
+	c.SetCookie("refresh_token", tokens.RefreshToken, 7*24*3600, "/auth", "", true, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"user": gin.H{
-			"username": user.Username,
+			"id":       user.ID,
 			"email":    user.Email,
+			"username": user.Username,
 			"type":     user.Type,
 		},
-		"authorized": true,
+		"message": "Login successful",
 	})
 }
 

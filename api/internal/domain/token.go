@@ -1,0 +1,42 @@
+package domain
+
+import (
+	"context"
+	"time"
+)
+
+type TokenConfig struct {
+	SigningKey string
+	AccessTTL  time.Duration
+	RefreshTTL time.Duration
+	Issuer     string // e.g., "your-app-name"
+	Audience   string // e.g., "your-app-users"
+}
+
+type TokenPair struct {
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	ExpiresAt    time.Time `json:"expires_at"`
+	TokenType    string    `json:"token_type"`
+}
+
+// TokenCache interface for optional token caching
+type TokenCache interface {
+	Get(key string) (any, bool)
+	Set(key string, value any, duration time.Duration)
+	Delete(key string)
+}
+
+// UserService interface for user operations
+type UserService interface {
+	GetUserByID(ctx context.Context, userID string) (*User, error)
+	IsUserActive(ctx context.Context, userID string) (bool, error)
+}
+
+// MiddlewareConfig holds configuration for the JWT middleware
+type MiddlewareConfig struct {
+	UserService    UserService
+	Cache          TokenCache
+	CacheDuration  time.Duration
+	SkipUserLookup bool
+}

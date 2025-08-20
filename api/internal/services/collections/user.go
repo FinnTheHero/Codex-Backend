@@ -1,20 +1,20 @@
 package firestore_services
 
 import (
-	cmn "Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/common"
+	firestore_client "Codex-Backend/api/internal/database/client"
+	firestore_collections "Codex-Backend/api/internal/database/collections"
 	"Codex-Backend/api/internal/domain"
-	firestore_client "Codex-Backend/api/internal/infrastructure/client"
-	firestore_collections "Codex-Backend/api/internal/infrastructure/collections"
 	"context"
 	"errors"
 	"net/http"
 	"time"
 )
 
-func LoginUser(credentials domain.Credentials, ctx context.Context) (string, *domain.User, error) {
+func LoginUser(credentials domain.Credentials, ctx context.Context) (*domain.User, error) {
 	client, err := firestore_client.FirestoreClient()
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	defer client.Close()
 
@@ -22,24 +22,40 @@ func LoginUser(credentials domain.Credentials, ctx context.Context) (string, *do
 
 	user, err := c.GetUserByEmail(credentials.Email, ctx)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 
 	if user == nil {
-		return "", nil, &cmn.Error{Err: errors.New("Login Service Error - User not found"), Status: http.StatusNotFound}
+		return nil, &cmn.Error{Err: errors.New("Login Service Error - User not found"), Status: http.StatusNotFound}
 	}
 
 	err = cmn.VerifyPassword(user.Password, credentials.Password)
 	if err != nil {
-		return "", nil, &cmn.Error{Err: errors.New("Login Service Error - Invalid password"), Status: http.StatusUnauthorized}
+		return nil, &cmn.Error{Err: errors.New("Login Service Error - Invalid password"), Status: http.StatusUnauthorized}
 	}
 
-	token, err := cmn.GenerateToken(credentials.Email)
+	return user, nil
+}
+
+func GetUserByID(id string, ctx context.Context) (*domain.User, error) {
+	client, err := firestore_client.FirestoreClient()
 	if err != nil {
-		return "", nil, err
+		return nil, err
+	}
+	defer client.Close()
+
+	c := firestore_collections.Client{Client: client}
+
+	user, err := c.GetUserById(id, ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	return token, user, nil
+	if user == nil {
+		return nil, &cmn.Error{Err: errors.New("Get User By ID Service Error - User not found"), Status: http.StatusNotFound}
+	}
+
+	return user, nil
 }
 
 func RegisterUser(newUser domain.NewUser, ctx context.Context) error {

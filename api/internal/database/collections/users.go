@@ -1,7 +1,7 @@
 package firestore_collections
 
 import (
-	cmn "Codex-Backend/api/internal/common"
+	cmn "Codex-Backend/api/common"
 	"Codex-Backend/api/internal/domain"
 	"context"
 	"errors"
