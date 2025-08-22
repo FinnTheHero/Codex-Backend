@@ -15,6 +15,12 @@ import (
 
 func SetClaimsFromToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+		if path == "/api/user/refresh" || path == "/api/user/logout" || path == "/api/user/login" {
+			c.Next()
+			return
+		}
+
 		tokenString, err := ExtractToken(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
