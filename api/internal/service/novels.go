@@ -113,6 +113,43 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 	return nil
 }
 
+func processChap(chapter pamphlet.Chapter, index int, author string) (*domain.Chapter, error) {
+	c_id, err := cmn.GenerateID("chapter")
+	if err != nil {
+		return nil, err
+	}
+
+	rawContent, err := chapter.GetContent()
+	if err != nil {
+		return nil, err
+	}
+
+	titleLower := strings.ToLower(chapter.Title)
+	contentLower := strings.ToLower(rawContent)
+
+	if strings.HasPrefix(contentLower, titleLower) {
+		rawContent = rawContent[len(chapter.Title):]
+		rawContent = strings.TrimLeft(rawContent, " \t\n\r")
+	}
+
+	content, err := cleanHtml(rawContent)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.Chapter{
+		ID:          c_id,
+		Title:       chapter.Title,
+		Author:      author,
+		Description: "",
+		CreatedAt:   cmn.TimeStamp(""),
+		UpdatedAt:   cmn.TimeStamp(""),
+		Content:     content,
+		Index:       index,
+		Deleted:     false,
+	}, nil
+}
+
 func CreateNovel(novel domain.Novel, ctx context.Context) (error, string) {
 	client, err := firestore_client.FirestoreClient()
 	if err != nil {
