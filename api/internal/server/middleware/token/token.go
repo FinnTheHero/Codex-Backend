@@ -13,11 +13,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// ValidateToken creates a JWT validation middleware with configurable options
-func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
+func SetClaimsFromToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Extract token
-		tokenString, err := extractToken(c)
+		tokenString, err := ExtractToken(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "Missing or invalid authorization token",
@@ -36,16 +34,27 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 
 		// Set claims in context (always available)
 		c.Set("claims", claims)
+	}
+}
 
-		// Skip user lookup if not needed (for performance)
-		if config.SkipUserLookup {
+// ValidateToken creates a JWT validation middleware with configurable options
+func LookupUser(config domain.LookupUser) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims, exists := c.Get("claims")
+		if !exists {
+			c.Next()
+			return
+		}
+
+		userClaims, ok := claims.(*domain.Claims)
+		if !ok {
 			c.Next()
 			return
 		}
 
 		// Check cache first
 		var user *domain.User
-		cacheKey := fmt.Sprintf("user:%s", claims.ID)
+		cacheKey := fmt.Sprintf("user:%s", userClaims.ID)
 
 		if config.Cache != nil {
 			if cached, found := config.Cache.Get(cacheKey); found {
@@ -57,7 +66,7 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 
 		// Fetch user if not in cache
 		if user == nil {
-			user, err = service.GetUserByID(claims.ID, c.Request.Context())
+			user, err := service.GetUserByID(userClaims.ID, c.Request.Context())
 			if err != nil {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 					"error": "User verification failed",
@@ -85,7 +94,7 @@ func ValidateToken(config domain.MiddlewareConfig) gin.HandlerFunc {
 }
 
 // extractToken extracts JWT token from cookie or Authorization header
-func extractToken(c *gin.Context) (string, error) {
+func ExtractToken(c *gin.Context) (string, error) {
 	// Try cookie first
 	if tokenString, err := c.Cookie("access_token"); err == nil && tokenString != "" {
 		return tokenString, nil
@@ -136,20 +145,13 @@ func ParseAndValidateJWT(tokenString string) (*domain.Claims, error) {
 	return claims, nil
 }
 
-func AuthenticateOnly() gin.HandlerFunc {
-	return ValidateToken(domain.MiddlewareConfig{
-		SkipUserLookup: true,
-	})
-}
-
 type FirestoreUserService struct {
 	client *firestore.Client
 }
 
-func (mf *IMTokenCache) AuthenticateAndLoadUser() gin.HandlerFunc {
-	return ValidateToken(domain.MiddlewareConfig{
-		Cache:          mf.cache,
-		CacheDuration:  1 * time.Hour,
-		SkipUserLookup: false,
+func (mf *IMTokenCache) LoadUser() gin.HandlerFunc {
+	return LookupUser(domain.LookupUser{
+		Cache:         mf.cache,
+		CacheDuration: 1 * time.Hour,
 	})
 }
