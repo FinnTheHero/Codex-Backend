@@ -13,7 +13,7 @@ import (
 func RegisteredRoutes(r *gin.Engine) {
 	domains := cmn.GetDomains("DOMAIN")
 	if gin.Mode() == gin.DebugMode && len(domains) == 0 {
-		domains[0] = "*"
+		domains = []string{"*"}
 	}
 
 	r.Use(cors.New(cors.Config{
