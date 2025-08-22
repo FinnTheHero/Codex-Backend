@@ -55,7 +55,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	// Add mandatory token check
 	r.Use(token.SetClaimsFromToken(), token.GlobalToken.AutoRefreshTokenMiddleware())
 
-	client := r.Group("/")
+	client := r.Group("/api/")
 	{
 		client.GET("/all", handler.FindAllNovels)
 		client.GET("/:novel", handler.FindNovel)
@@ -64,7 +64,7 @@ func RegisteredRoutes(r *gin.Engine) {
 		client.GET("/:novel/chapters", handler.GetPaginatedChapters)
 	}
 
-	manage := r.Group("/manage")
+	manage := r.Group("/api/manage")
 	{
 		manage.Use(token.GlobalToken.LoadUser())
 
@@ -82,7 +82,7 @@ func RegisteredRoutes(r *gin.Engine) {
 		manage.DELETE("/:novel/:chapter", handler.DeleteChapter)
 	}
 
-	user := r.Group("/user")
+	user := r.Group("/api/user")
 	{
 		user.GET("/validate", handler.ValidateToken)
 		user.POST("/login", handler.LoginUser)
