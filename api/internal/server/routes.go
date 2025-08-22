@@ -54,7 +54,8 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	token.InitIMTokenCache()
 
-	r.Use(token.AuthenticateOnly(), token.GlobalToken.AutoRefreshTokenMiddleware())
+	// Add mandatory token check
+	r.Use(token.SetClaimsFromToken(), token.GlobalToken.AutoRefreshTokenMiddleware())
 
 	client := r.Group("/")
 	{
@@ -67,19 +68,20 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	manage := r.Group("/manage")
 	{
+		manage.Use(token.GlobalToken.LoadUser())
 
 		// Create
-		manage.POST("/novel", token.AuthenticateOnly(), handler.CreateNovel)
-		manage.POST("/:novel/chapter", token.AuthenticateOnly(), handler.CreateChapter)
-		manage.POST("/epub", token.AuthenticateOnly(), handler.EPUBNovel)
+		manage.POST("/novel", handler.CreateNovel)
+		manage.POST("/:novel/chapter", handler.CreateChapter)
+		manage.POST("/epub", handler.EPUBNovel)
 
 		// Update
-		manage.PUT("/:novel", token.AuthenticateOnly(), handler.UpdateNovel)
-		manage.PUT("/:novel/:chapter", token.AuthenticateOnly(), handler.UpdateChapter)
+		manage.PUT("/:novel", handler.UpdateNovel)
+		manage.PUT("/:novel/:chapter", handler.UpdateChapter)
 
 		// Delete
-		manage.DELETE("/:novel", token.AuthenticateOnly(), handler.DeleteNovel)
-		manage.DELETE("/:novel/:chapter", token.AuthenticateOnly(), handler.DeleteChapter)
+		manage.DELETE("/:novel", handler.DeleteNovel)
+		manage.DELETE("/:novel/:chapter", handler.DeleteChapter)
 	}
 
 	user := r.Group("/user")

@@ -55,7 +55,7 @@ func (mf *IMTokenCache) AutoRefreshTokenMiddleware() gin.HandlerFunc {
 		config := DefaultTokenConfig()
 
 		// Generate new access token using refresh token
-		newAccessToken, err := refreshAccessTokenFromString(refreshToken, userClaims.ID, domain.MiddlewareConfig{
+		newAccessToken, err := refreshAccessTokenFromString(refreshToken, userClaims.ID, domain.LookupUser{
 			Cache:         mf.cache,
 			CacheDuration: 1 * time.Hour,
 		}, ctx)
