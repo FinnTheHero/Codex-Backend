@@ -73,36 +73,30 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 
 	rawChapters := book.Chapters
 
-	c_id, err := cmn.GenerateID("chapter")
-	if err != nil {
-		return err
+	// Split chapters by priority
+	// Chpaters with chpater in title take priority
+	// Notes, Synopsys and everything else will be processes last
+	extraChapters := []pamphlet.Chapter{}
+	actualChapters := []pamphlet.Chapter{}
+
+	for _, chapter := range rawChapters {
+		if strings.Contains(strings.ToLower(chapter.Title), "chapter") {
+			actualChapters = append(actualChapters, chapter)
+		} else {
+			extraChapters = append(extraChapters, chapter)
+		}
 	}
 
-	chapters := make([]domain.Chapter, len(rawChapters))
-	for i, chapter := range rawChapters {
-		rawContent, err := chapter.GetContent()
+	orderedChapters := append(actualChapters, extraChapters...)
+
+	chapters := make([]domain.Chapter, len(orderedChapters))
+	for i, chapter := range orderedChapters {
+		chap, err := processChap(chapter, i, book.Author)
 		if err != nil {
 			return err
 		}
 
-		content, err := cleanHtml(rawContent)
-		if err != nil {
-			return err
-		}
-
-		chapter := &domain.Chapter{
-			ID:          c_id,
-			Title:       chapter.Title,
-			Author:      book.Author,
-			Description: "",
-			CreatedAt:   cmn.TimeStamp(""),
-			UpdatedAt:   cmn.TimeStamp(""),
-			Content:     content,
-			Index:       i,
-			Deleted:     false,
-		}
-
-		chapters[i] = *chapter
+		chapters[i] = *chap
 	}
 
 	err = BatchUploadChapters(id, chapters, ctx)
