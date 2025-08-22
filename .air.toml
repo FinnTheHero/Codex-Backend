@@ -4,8 +4,8 @@ tmp_dir = "tmp"
 
 [build]
 args_bin = []
-bin = "./tmp/codex"
-cmd = "go build -o ./tmp/codex ./api/cmd/codex"
+bin = "./tmp/web"
+cmd = "go build -o ./tmp/web ./api/cmd/web"
 delay = 1000
 exclude_dir = [
     ".git",
@@ -15,6 +15,7 @@ exclude_dir = [
     "node_modules",
     ".vscode",
     ".idea",
+    ".github",
 ]
 exclude_file = []
 exclude_regex = ["_test\\.go$", "\\.git", "\\.DS_Store"]

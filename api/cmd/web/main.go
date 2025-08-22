@@ -1,8 +1,8 @@
 package main
 
 import (
-	cmn "Codex-Backend/api/internal/common"
-	firestore_server "Codex-Backend/api/internal/interfaces/rest"
+	cmn "Codex-Backend/api/common"
+	firestore_server "Codex-Backend/api/internal/server"
 	"os"
 
 	_ "github.com/heroku/x/hmetrics/onload"

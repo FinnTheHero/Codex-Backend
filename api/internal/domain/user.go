@@ -1,7 +1,5 @@
 package domain
 
-import "github.com/golang-jwt/jwt/v5"
-
 type User struct {
 	ID        string `json:"id"`
 	Username  string `json:"username"`
@@ -15,11 +13,6 @@ type User struct {
 type Credentials struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-}
-
-type Claims struct {
-	Email string `json:"email"`
-	jwt.RegisteredClaims
 }
 
 type NewUser struct {

@@ -1,8 +1,8 @@
 package main
 
 import (
-	cmn "Codex-Backend/api/internal/common"
-	queue "Codex-Backend/api/internal/common/river"
+	cmn "Codex-Backend/api/common"
+	queue "Codex-Backend/api/common/river"
 	"context"
 	"log"
 	"os"
