@@ -11,15 +11,13 @@ import (
 )
 
 func RegisteredRoutes(r *gin.Engine) {
-	domain_url := cmn.GetEnvVariable("DOMAIN")
-	if gin.Mode() == gin.DebugMode && domain_url == "" {
-		domain_url = "*"
+	domains := cmn.GetDomains("DOMAIN")
+	if gin.Mode() == gin.DebugMode && len(domains) == 0 {
+		domains[0] = "*"
 	}
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			domain_url,
-		},
+		AllowOrigins: domains,
 		AllowMethods: []string{
 			"GET",
 			"POST",
