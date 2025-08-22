@@ -75,11 +75,11 @@ func (mf *IMTokenCache) AutoRefreshTokenMiddleware() gin.HandlerFunc {
 	}
 }
 
-func refreshAccessTokenFromString(refreshTokenString, expectedUserID string, cacheConfig domain.MiddlewareConfig, ctx context.Context) (string, error) {
+func refreshAccessTokenFromString(refreshTokenString, expectedUserID string, cacheConfig domain.LookupUser, ctx context.Context) (string, error) {
 	config := DefaultTokenConfig()
 
 	// Parse refresh token
-	token, err := jwt.ParseWithClaims(refreshTokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(refreshTokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
