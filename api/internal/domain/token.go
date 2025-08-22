@@ -36,11 +36,9 @@ type TokenCache interface {
 	Delete(key string)
 }
 
-// MiddlewareConfig holds configuration for the JWT middleware
-type MiddlewareConfig struct {
-	Cache          TokenCache
-	CacheDuration  time.Duration
-	SkipUserLookup bool
+type LookupUser struct {
+	Cache         TokenCache
+	CacheDuration time.Duration
 }
 
 type InMemoryCache struct {
