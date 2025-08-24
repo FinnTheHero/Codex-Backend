@@ -112,6 +112,6 @@ func refreshAccessTokenFromString(refreshTokenString, expectedUserID string, cac
 	}
 
 	// Generate new access token
-	newAccessToken, _, err := generateAccessToken(user.ID, user.Email, config)
+	newAccessToken, _, err := generateAccessToken(user, config)
 	return newAccessToken, err
 }

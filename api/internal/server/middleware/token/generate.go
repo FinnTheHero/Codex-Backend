@@ -23,13 +23,13 @@ func GenerateTokenPair(user *domain.User, config domain.TokenConfig) (*domain.To
 	}
 
 	// Generate access token
-	accessToken, expiresAt, err := generateAccessToken(ID, email, config)
+	accessToken, expiresAt, err := generateAccessToken(user, config)
 	if err != nil {
 		return nil, err
 	}
 
 	// Generate refresh token
-	refreshToken, err := generateRefreshToken(ID, config)
+	refreshToken, err := generateRefreshToken(user.ID, config)
 	if err != nil {
 		return nil, err
 	}

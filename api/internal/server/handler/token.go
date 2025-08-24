@@ -55,7 +55,7 @@ func RefreshToken(c *gin.Context) {
 	}
 
 	// Generate new token pair
-	tokens, err := token_middleware.GenerateTokenPair(user.ID, user.Email, config)
+	tokens, err := token_middleware.GenerateTokenPair(user, config)
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Token generation failed"})
 		return
