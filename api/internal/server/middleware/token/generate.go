@@ -11,11 +11,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateTokenPair(ID, email string, config domain.TokenConfig) (*domain.TokenPair, error) {
-	if ID == "" {
+func GenerateTokenPair(user *domain.User, config domain.TokenConfig) (*domain.TokenPair, error) {
+	if user.ID == "" {
 		return nil, &cmn.Error{Err: errors.New("user ID cannot be empty")}
 	}
-	if email == "" {
+	if user.Email == "" {
 		return nil, &cmn.Error{Err: errors.New("email cannot be empty")}
 	}
 	if config.SigningKey == "" {
@@ -43,12 +43,12 @@ func GenerateTokenPair(ID, email string, config domain.TokenConfig) (*domain.Tok
 }
 
 // GenerateAccessToken creates a new access token (for refresh scenarios)
-func GenerateAccessToken(ID, email string, config domain.TokenConfig) (string, time.Time, error) {
-	return generateAccessToken(ID, email, config)
+func GenerateAccessToken(user *domain.User, config domain.TokenConfig) (string, time.Time, error) {
+	return generateAccessToken(user, config)
 }
 
 // generateAccessToken creates the actual access token
-func generateAccessToken(ID, email string, config domain.TokenConfig) (string, time.Time, error) {
+func generateAccessToken(user *domain.User, config domain.TokenConfig) (string, time.Time, error) {
 	now := time.Now()
 	expirationTime := now.Add(config.AccessTTL)
 
@@ -59,11 +59,13 @@ func generateAccessToken(ID, email string, config domain.TokenConfig) (string, t
 	}
 
 	claims := &domain.Claims{
-		ID:    ID,
-		Email: email,
+		ID:       user.ID,
+		Email:    user.Email,
+		Username: user.Username,
+		Type:     user.Type,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        jti,
-			Subject:   ID,
+			Subject:   user.ID,
 			Audience:  jwt.ClaimStrings{config.Audience},
 			Issuer:    config.Issuer,
 			IssuedAt:  jwt.NewNumericDate(now),
