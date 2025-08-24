@@ -77,7 +77,7 @@ func ValidateToken(c *gin.Context) {
 	result_claims, ok := c.Get("claims")
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusNotFound, gin.H{
-			"error": "User not found",
+			"error": "User claims not found",
 		})
 		return
 	}
@@ -85,13 +85,15 @@ func ValidateToken(c *gin.Context) {
 	claims, ok := result_claims.(*domain.Claims)
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid user structure",
+			"error": "Invalid claims structure",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":    claims.ID,
-		"email": claims.Email,
+		"id":       claims.ID,
+		"email":    claims.Email,
+		"username": claims.Username,
+		"role":     claims.Type,
 	})
 }
