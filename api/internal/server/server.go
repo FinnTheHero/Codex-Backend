@@ -1,7 +1,6 @@
 package server
 
 import (
-	cmn "Codex-Backend/api/common"
 	"context"
 	"log"
 	"net/http"
@@ -14,9 +13,6 @@ import (
 )
 
 func Server() {
-	mode := cmn.GetEnvVariable("GIN_MODE")
-	gin.SetMode(mode)
-
 	r := gin.Default()
 	RegisteredRoutes(r)
 

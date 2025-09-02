@@ -3,15 +3,16 @@ package main
 import (
 	cmn "Codex-Backend/api/common"
 	firestore_server "Codex-Backend/api/internal/server"
-	"os"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/heroku/x/hmetrics/onload"
 )
 
 func init() {
-	if mode := os.Getenv("GIN_MODE"); mode == "debug" {
-		cmn.LoadEnvVariables()
-	}
+	cmn.LoadEnvVariables()
+
+	mode := cmn.GetEnvVariable("GIN_MODE")
+	gin.SetMode(mode)
 }
 
 func main() {
