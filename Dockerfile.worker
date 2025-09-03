@@ -1,0 +1,31 @@
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /app
+COPY . .
+RUN go build -o worker ./api/cmd/worker
+
+FROM alpine:latest
+
+# Install ca-certificates for HTTPS requests and security updates
+RUN apk --no-cache add ca-certificates && \
+    apk upgrade
+
+# Create a non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Create app directory
+WORKDIR /app
+
+# Copy binary with proper ownership and permissions
+COPY --from=builder --chown=appuser:appgroup /app/worker ./worker
+
+COPY .env .env
+
+RUN chmod +x ./worker
+
+# Switch to non-root user
+USER appuser
+
+# Run the application
+CMD ["./worker"]
