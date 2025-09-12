@@ -100,4 +100,10 @@ func RegisteredRoutes(r *gin.Engine) {
 
 		validate.GET("/", handler.ValidateToken)
 	}
+
+	// For docker health check
+	health := r.Group("/health")
+	{
+		health.GET("/", handler.HealthCheck)
+	}
 }
