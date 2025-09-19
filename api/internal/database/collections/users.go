@@ -1,4 +1,4 @@
-package firestore_collections
+package db
 
 import (
 	cmn "Codex-Backend/api/common"

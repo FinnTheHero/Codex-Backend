@@ -1,115 +1,115 @@
-package firestore_collections
+package db
 
 import (
 	cmn "Codex-Backend/api/common"
 	"Codex-Backend/api/internal/domain"
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
-	"cloud.google.com/go/firestore"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Client struct {
-	*firestore.Client
-}
-
 func (c *Client) CreateNovel(novel domain.Novel, ctx context.Context) error {
-	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, novel)
-	if err != nil {
-		return &cmn.Error{Err: errors.New("Firestore Client Error - Create Novel: " + err.Error()), Status: http.StatusInternalServerError}
-	}
-
-	return nil
+	return c.WithConn(ctx, func(conn *pgxpool.Conn) error {
+		const insertSQL = `INSERT INTO novels (title, author, description) VALUES ($1,$2,$3)`
+		if _, err := conn.Exec(ctx, insertSQL, novel.Title, novel.Author, novel.Description); err != nil {
+			return &cmn.Error{Err: fmt.Errorf("insert novel: %w", err), Status: http.StatusInternalServerError}
+		}
+		return nil
+	})
 }
 
-func (c *Client) GetNovelById(id string, ctx context.Context) (*domain.Novel, error) {
-	doc, err := c.Client.Collection("novels").Doc(id).Get(ctx)
-	if err != nil {
-		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by ID: " + err.Error()), Status: http.StatusInternalServerError}
-	}
-
+func (c *Client) GetNovelById(id string, ctx context.Context) (domain.Novel, error) {
 	novel := domain.Novel{}
-	if err := doc.DataTo(&novel); err != nil {
-		if status.Convert(err).Code() == codes.NotFound {
-			return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by ID - Novel not found"), Status: http.StatusNotFound}
-		}
-		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by ID: " + err.Error()), Status: http.StatusInternalServerError}
-	}
 
-	return &novel, nil
+	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
+		if err := conn.QueryRow(ctx, "SELECT id, title, author, description FROM novels WHERE id = $1", id).Scan(&novel.ID, &novel.Title, &novel.Author, &novel.Description); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return &cmn.Error{Err: fmt.Errorf("novel not found: %w", err), Status: http.StatusNotFound}
+			}
+			return &cmn.Error{Err: fmt.Errorf("get novel by id: %w", err), Status: http.StatusInternalServerError}
+		}
+		return nil
+	}); err != nil {
+		return domain.Novel{}, err
+	}
+	return novel, nil
 }
 
-func (c *Client) GetAllNovels(ctx context.Context) (*[]domain.Novel, error) {
-	doc, err := c.Client.Collection("novels").Documents(ctx).GetAll()
-	if err != nil {
-		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get All Novels: " + err.Error()), Status: http.StatusInternalServerError}
-	}
-
+func (c *Client) GetAllNovels(ctx context.Context) ([]domain.Novel, error) {
 	novels := []domain.Novel{}
-	for _, d := range doc {
-		novel := domain.Novel{}
-		if err := d.DataTo(&novel); err != nil {
-			return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get All Novels: " + err.Error()), Status: http.StatusInternalServerError}
-		}
-		novels = append(novels, novel)
-	}
 
-	return &novels, nil
+	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
+		rows, err := conn.Query(ctx, "SELECT id, title, author, description FROM novels")
+		if err != nil {
+			return &cmn.Error{Err: fmt.Errorf("get all novels: %w", err), Status: http.StatusInternalServerError}
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			novel := domain.Novel{}
+			if err := rows.Scan(&novel.ID, &novel.Title, &novel.Author, &novel.Description); err != nil {
+				return &cmn.Error{Err: fmt.Errorf("scan novel row: %w", err), Status: http.StatusInternalServerError}
+			}
+			novels = append(novels, novel)
+		}
+		if err := rows.Err(); err != nil {
+			return &cmn.Error{Err: fmt.Errorf("scan novel rows: %w", err), Status: http.StatusInternalServerError}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return novels, nil
 }
 
 func (c *Client) UpdateNovel(novel domain.Novel, ctx context.Context) error {
-	updates := make(map[string]any)
-
-	if novel.Title != "" {
-		updates["Title"] = novel.Title
-	}
-
-	if novel.Description != "" {
-		updates["Description"] = novel.Description
-	}
-
-	if len(updates) == 0 {
+	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
+		query := fmt.Sprintf("UPDATE novels SET title = $1, description = $2, updated_at = $3 WHERE id = $4")
+		_, err := conn.Exec(ctx, query, novel.Title, novel.Description, time.Now(), novel.ID)
+		if err != nil {
+			return &cmn.Error{Err: fmt.Errorf("update novel: %w", err), Status: http.StatusInternalServerError}
+		}
 		return nil
+	}); err != nil {
+		return err
 	}
-
-	updates["UpdatedAt"] = time.Now().Format("2006-01-02 15:04:05")
-
-	_, err := c.Client.Collection("novels").Doc(novel.ID).Set(ctx, updates, firestore.MergeAll)
-	if err != nil {
-		return &cmn.Error{Err: errors.New("Firestore Client Error - Update Novel: " + err.Error()), Status: http.StatusInternalServerError}
-	}
-
 	return nil
 }
 
 func (c *Client) DeleteNovel(novelId string, ctx context.Context) error {
-	_, err := c.Client.Collection("novels").Doc(novelId).Delete(ctx)
-	if err != nil {
-		return &cmn.Error{Err: errors.New("Firestore Client Error - Delete Novel: " + err.Error()), Status: http.StatusInternalServerError}
+	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
+		query := fmt.Sprintf("UPDATE novels SET deleted = $1 WHERE id = $2")
+		_, err := conn.Exec(ctx, query, true, novelId)
+		if err != nil {
+			return &cmn.Error{Err: fmt.Errorf("delete novel: %w", err), Status: http.StatusInternalServerError}
+		}
+		return nil
+	}); err != nil {
+		return err
 	}
-
 	return nil
 }
 
-func (c *Client) GetNovelByTitle(title string, ctx context.Context) (*domain.Novel, error) {
-	query := c.Client.Collection("novels").Where("Title", "==", title).Limit(1)
-	docs, err := query.Documents(ctx).GetAll()
-	if err != nil {
-		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by Title: " + err.Error()), Status: http.StatusInternalServerError}
-	}
-
-	if len(docs) == 0 {
-		return nil, &cmn.Error{Err: errors.New("Novel not found"), Status: http.StatusNotFound}
-	}
-
+func (c *Client) GetNovelByTitle(title string, ctx context.Context) (domain.Novel, error) {
 	novel := domain.Novel{}
-	if err := docs[0].DataTo(&novel); err != nil {
-		return nil, &cmn.Error{Err: errors.New("Firestore Client Error - Get Novel by Title: " + err.Error()), Status: http.StatusInternalServerError}
-	}
 
-	return &novel, nil
+	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
+		query := fmt.Sprintf("SELECT id, title, author, description FROM novels WHERE title = $1 AND deleted = $2")
+		row := conn.QueryRow(ctx, query, title, false)
+		if err := row.Scan(&novel.ID, &novel.Title, &novel.Author, &novel.Description); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return &cmn.Error{Err: errors.New("Novel not found"), Status: http.StatusNotFound}
+			}
+			return &cmn.Error{Err: fmt.Errorf("get novel by title: %w", err), Status: http.StatusInternalServerError}
+		}
+		return nil
+	}); err != nil {
+		return domain.Novel{}, err
+	}
+	return novel, nil
 }
