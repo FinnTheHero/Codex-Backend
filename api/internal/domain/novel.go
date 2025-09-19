@@ -1,22 +1,24 @@
 package domain
 
+import "time"
+
 // Novel struct used on backend
 type Novel struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Author      string `json:"author"`
-	Description string `json:"description"`
-	CreatedAt   string `json:"creation_date"`
-	UpdatedAt   string `json:"update_date"`
-	Deleted     bool   `json:"deleted"`
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Author      string    `json:"author"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"creation_date"`
+	UpdatedAt   time.Time `json:"update_date"`
+	Deleted     bool      `json:"deleted"`
 }
 
 // Novel struct used on frontend
 type FrontendNovel struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Author      string `json:"author"`
-	Description string `json:"description"`
-	CreatedAt   string `json:"creation_date"`
-	UpdatedAt   string `json:"update_date"`
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Author      string    `json:"author"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"creation_date"`
+	UpdatedAt   time.Time `json:"update_date"`
 }

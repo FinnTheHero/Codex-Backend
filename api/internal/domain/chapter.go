@@ -1,6 +1,10 @@
 package domain
 
-import "cloud.google.com/go/firestore"
+import (
+	"time"
+
+	"cloud.google.com/go/firestore"
+)
 
 type CursorOptions struct {
 	NovelID string              `json:"novel_id"`
@@ -16,21 +20,21 @@ type CursorResponse struct {
 
 // Chapter struct used on backend
 type Chapter struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Author      string `json:"author"`
-	Description string `json:"description"`
-	CreatedAt   string `json:"creation_date"`
-	UpdatedAt   string `json:"update_date"`
-	Content     string `json:"content"`
-	Index       int    `json:"index"`
-	Deleted     bool   `json:"deleted"`
+	ID          string    `json:"id"`
+	Title       string    `json:"title"`
+	Author      string    `json:"author"`
+	Description string    `json:"description"`
+	CreatedAt   time.Time `json:"creation_date"`
+	UpdatedAt   time.Time `json:"update_date"`
+	Content     string    `json:"content"`
+	Index       int       `json:"index"`
+	Deleted     bool      `json:"deleted"`
 }
 
 // Chapter struct used on frontend
 type FrontendChapter struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	UpdatedAt string `json:"update_date"`
-	Content   string `json:"content"`
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	UpdatedAt time.Time `json:"update_date"`
+	Content   string    `json:"content"`
 }
