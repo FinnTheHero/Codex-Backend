@@ -215,7 +215,7 @@ func (c *Client) GetAllChapters(novelId string, pageSize int, asc bool, ctx cont
 
 func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
 	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
-		query := fmt.Sprintf("UPDATE chapters SET title = $1, description = $2, content = $3, updated_at = $4 WHERE id = $5")
+		query := "UPDATE chapters SET title = $1, description = $2, content = $3, updated_at = $4 WHERE id = $5"
 		_, err := conn.Exec(ctx, query, chapter.Title, chapter.Description, chapter.Content, time.Now(), chapter.ID)
 		if err != nil {
 			return &cmn.Error{Err: fmt.Errorf("update chapter: %w", err), Status: http.StatusInternalServerError}
@@ -229,7 +229,7 @@ func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx conte
 
 func (c *Client) DeleteChapter(chapterId string, ctx context.Context) error {
 	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
-		query := fmt.Sprintf("UPDATE chapters SET deleted = $1 WHERE id = $2")
+		query := "UPDATE chapters SET deleted = $1 WHERE id = $2"
 		_, err := conn.Exec(ctx, query, true, chapterId)
 		if err != nil {
 			return &cmn.Error{Err: fmt.Errorf("delete chapter: %w", err), Status: http.StatusInternalServerError}

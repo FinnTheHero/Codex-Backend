@@ -69,7 +69,7 @@ func (c *Client) GetAllNovels(ctx context.Context) ([]domain.Novel, error) {
 
 func (c *Client) UpdateNovel(novel domain.Novel, ctx context.Context) error {
 	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
-		query := fmt.Sprintf("UPDATE novels SET title = $1, description = $2, updated_at = $3 WHERE id = $4")
+		query := "UPDATE novels SET title = $1, description = $2, updated_at = $3 WHERE id = $4"
 		_, err := conn.Exec(ctx, query, novel.Title, novel.Description, time.Now(), novel.ID)
 		if err != nil {
 			return &cmn.Error{Err: fmt.Errorf("update novel: %w", err), Status: http.StatusInternalServerError}
@@ -83,7 +83,7 @@ func (c *Client) UpdateNovel(novel domain.Novel, ctx context.Context) error {
 
 func (c *Client) DeleteNovel(novelId string, ctx context.Context) error {
 	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
-		query := fmt.Sprintf("UPDATE novels SET deleted = $1 WHERE id = $2")
+		query := "UPDATE novels SET deleted = $1 WHERE id = $2"
 		_, err := conn.Exec(ctx, query, true, novelId)
 		if err != nil {
 			return &cmn.Error{Err: fmt.Errorf("delete novel: %w", err), Status: http.StatusInternalServerError}
@@ -99,7 +99,7 @@ func (c *Client) GetNovelByTitle(title string, ctx context.Context) (domain.Nove
 	novel := domain.Novel{}
 
 	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
-		query := fmt.Sprintf("SELECT id, title, author, description FROM novels WHERE title = $1 AND deleted = $2")
+		query := "SELECT id, title, author, description FROM novels WHERE title = $1 AND deleted = $2"
 		row := conn.QueryRow(ctx, query, title, false)
 		if err := row.Scan(&novel.ID, &novel.Title, &novel.Author, &novel.Description); err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
