@@ -82,6 +82,16 @@ func (c *Client) EnsureSchema(ctx context.Context) error {
 		// extension for gen_random_uuid
 		`CREATE EXTENSION IF NOT EXISTS pgcrypto;`,
 
+		`CREATE TABLE IF NOT EXISTS users (
+				id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+				username text NOT NULL,
+				type text NOT NULL,
+				email text NOT NULL,
+				password text NOT NULL,
+				created_at timestamptz NOT NULL DEFAULT now(),
+				updated_at timestamptz NOT NULL DEFAULT now()
+			);`,
+
 		// novels with chapter_count for atomic index allocation
 		`CREATE TABLE IF NOT EXISTS novels (
 				id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -108,6 +118,9 @@ func (c *Client) EnsureSchema(ctx context.Context) error {
 			) PARTITION BY HASH (novel_id);`,
 		// an index that supports seek pagination: novel_id, chapter_index, id
 		`CREATE INDEX IF NOT EXISTS idx_chapters_novel_index_id ON chapters (novel_id, chapter_index, id);`,
+
+		`CREATE INDEX IF NOT EXISTS idx_novels_title_id ON novels (title, id);`,
+		`CREATE INDEX IF NOT EXISTS idx_users_email_id ON users (email, id);`,
 	}
 
 	for _, s := range stmts {
