@@ -119,7 +119,30 @@ func FindAllChapters(c *gin.Context) {
 		return
 	}
 
-	chapters, err := service.GetAllChapters(novelId, ctx)
+	var err error
+
+	pageSize := 100
+	p, exists := c.GetQuery("size")
+	if exists {
+		if pageSize, err = strconv.Atoi(p); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid page size",
+			})
+			return
+		}
+	}
+
+	ascending := false
+	asc, exists := c.GetQuery("ascending")
+	if exists {
+		if asc == "true" {
+			ascending = true
+		} else if asc == "false" {
+			ascending = false
+		}
+	}
+
+	chapters, err := service.GetAllChapters(novelId, pageSize, ascending, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapters: " + e.Error(),
@@ -185,7 +208,7 @@ func UpdateChapter(c *gin.Context) {
 		return
 	}
 
-	err := service.UpdateChapter(novelId, &chapter, ctx)
+	err := service.UpdateChapter(novelId, chapter, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to update chapter: " + e.Error(),

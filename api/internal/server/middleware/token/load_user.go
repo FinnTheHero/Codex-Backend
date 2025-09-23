@@ -53,13 +53,6 @@ func LookupUser(config domain.LookupUser) gin.HandlerFunc {
 				return
 			}
 
-			if user == nil {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-					"error": "User not found",
-				})
-				return
-			}
-
 			// Cache user if cache is available
 			if config.Cache != nil {
 				config.Cache.Set(cacheKey, user, config.CacheDuration)

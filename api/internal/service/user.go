@@ -2,85 +2,57 @@ package service
 
 import (
 	cmn "Codex-Backend/api/common"
-	firestore_client "Codex-Backend/api/internal/database/client"
-	firestore_collections "Codex-Backend/api/internal/database/collections"
+	db "Codex-Backend/api/internal/database"
 	"Codex-Backend/api/internal/domain"
 	"context"
 	"errors"
 	"net/http"
-	"time"
 )
 
-func LoginUser(credentials domain.Credentials, ctx context.Context) (*domain.User, error) {
-	client, err := firestore_client.FirestoreClient()
+func LoginUser(credentials domain.Credentials, ctx context.Context) (domain.User, error) {
+	client, err := db.GetClient(ctx)
 	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	c := firestore_collections.Client{Client: client}
-
-	user, err := c.GetUserByEmail(credentials.Email, ctx)
-	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 
-	if user == nil {
-		return nil, &cmn.Error{Err: errors.New("Login Service Error - User not found"), Status: http.StatusNotFound}
+	user, err := client.GetUserByEmail(credentials.Email, ctx)
+	if err != nil {
+		return domain.User{}, err
 	}
 
 	err = cmn.VerifyPassword(user.Password, credentials.Password)
 	if err != nil {
-		return nil, &cmn.Error{Err: errors.New("Login Service Error - Invalid password"), Status: http.StatusUnauthorized}
+		return domain.User{}, &cmn.Error{Err: errors.New("Login Service Error - Invalid password"), Status: http.StatusUnauthorized}
 	}
 
 	return user, nil
 }
 
-func GetUserByID(id string, ctx context.Context) (*domain.User, error) {
-	client, err := firestore_client.FirestoreClient()
+func GetUserByID(id string, ctx context.Context) (domain.User, error) {
+	client, err := db.GetClient(ctx)
 	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	c := firestore_collections.Client{Client: client}
-
-	user, err := c.GetUserById(id, ctx)
-	if err != nil {
-		return nil, err
+		return domain.User{}, err
 	}
 
-	if user == nil {
-		return nil, &cmn.Error{Err: errors.New("Get User By ID Service Error - User not found"), Status: http.StatusNotFound}
+	user, err := client.GetUserById(id, ctx)
+	if err != nil {
+		return domain.User{}, err
 	}
 
 	return user, nil
 }
 
 func RegisterUser(newUser domain.NewUser, ctx context.Context) error {
-	client, err := firestore_client.FirestoreClient()
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 
-	c := firestore_collections.Client{Client: client}
-
-	user, err := c.GetUserByEmail(newUser.Email, ctx)
+	_, err = client.GetUserByEmail(newUser.Email, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		if e.StatusCode() != http.StatusNotFound {
 			return &cmn.Error{Err: errors.New("Register Service Error - Getting User By Email: " + err.Error()), Status: http.StatusInternalServerError}
 		}
-	}
-
-	if user != nil {
-		return &cmn.Error{Err: errors.New("Register Service Error - User With Email " + newUser.Email + " Already Exists"), Status: http.StatusConflict}
-	}
-
-	id, err := cmn.GenerateID("user")
-	if err != nil {
-		return err
 	}
 
 	hashedPassword, err := cmn.HashPassword(newUser.Password)
@@ -88,16 +60,12 @@ func RegisterUser(newUser domain.NewUser, ctx context.Context) error {
 		return err
 	}
 
-	err = c.CreateUser(domain.User{
-		ID:        id,
-		Username:  newUser.Username,
-		Password:  string(hashedPassword),
-		Email:     newUser.Email,
-		Type:      "User",
-		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
-		UpdatedAt: time.Now().Format("2006-01-02 15:04:05"),
-	}, ctx)
-	if err != nil {
+	if err = client.CreateUser(domain.User{
+		Username: newUser.Username,
+		Password: string(hashedPassword),
+		Email:    newUser.Email,
+		Type:     "User",
+	}, ctx); err != nil {
 		return err
 	}
 
@@ -113,16 +81,12 @@ func LogoutUser(tokenString string) error {
 }
 
 func UpdateUser(updatedUser domain.User, ctx context.Context) error {
-	client, err := firestore_client.FirestoreClient()
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 
-	c := firestore_collections.Client{Client: client}
-
-	err = c.UpdateUser(updatedUser, ctx)
-	if err != nil {
+	if err = client.UpdateUser(updatedUser, ctx); err != nil {
 		return err
 	}
 
@@ -130,16 +94,12 @@ func UpdateUser(updatedUser domain.User, ctx context.Context) error {
 }
 
 func DeleteUser(id string, ctx context.Context) error {
-	client, err := firestore_client.FirestoreClient()
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 
-	c := firestore_collections.Client{Client: client}
-
-	err = c.DeleteUser(id, ctx)
-	if err != nil {
+	if err = client.DeleteUser(id, ctx); err != nil {
 		return err
 	}
 

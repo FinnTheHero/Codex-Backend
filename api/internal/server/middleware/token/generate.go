@@ -11,7 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateTokenPair(user *domain.User, config domain.TokenConfig) (*domain.TokenPair, error) {
+func GenerateTokenPair(user domain.User, config domain.TokenConfig) (*domain.TokenPair, error) {
 	if user.ID == "" {
 		return nil, &cmn.Error{Err: errors.New("user ID cannot be empty")}
 	}
@@ -43,12 +43,12 @@ func GenerateTokenPair(user *domain.User, config domain.TokenConfig) (*domain.To
 }
 
 // GenerateAccessToken creates a new access token (for refresh scenarios)
-func GenerateAccessToken(user *domain.User, config domain.TokenConfig) (string, time.Time, error) {
+func GenerateAccessToken(user domain.User, config domain.TokenConfig) (string, time.Time, error) {
 	return generateAccessToken(user, config)
 }
 
 // generateAccessToken creates the actual access token
-func generateAccessToken(user *domain.User, config domain.TokenConfig) (string, time.Time, error) {
+func generateAccessToken(user domain.User, config domain.TokenConfig) (string, time.Time, error) {
 	now := time.Now()
 	expirationTime := now.Add(config.AccessTTL)
 
