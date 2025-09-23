@@ -13,10 +13,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type Client struct {
-	Pool *pgxpool.Pool
-}
-
 type seekCursor struct {
 	Index int64  `json:"idx"`
 	ID    string `json:"id"`
