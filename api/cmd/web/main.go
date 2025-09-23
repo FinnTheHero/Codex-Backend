@@ -17,8 +17,7 @@ func init() {
 	gin.SetMode(mode)
 
 	ctx := context.Background()
-	connStr := cmn.GetEnvVariable("DATABASE_URL")
-	client, err := db_client.GetClient(connStr)
+	client, err := db_client.GetClient(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("db new client: %v", err))
 	}
