@@ -56,7 +56,7 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	client := r.Group("/api/")
 	{
-		client.Use(token.SetClaimsFromToken(), token.GlobalToken.UpdateAccessToken(), token.GlobalToken.LoadUser())
+		// client.Use(token.SetClaimsFromToken(), token.GlobalToken.UpdateAccessToken(), token.GlobalToken.LoadUser())
 
 		// Potentially add user public profile view here as well.
 
@@ -76,15 +76,15 @@ func RegisteredRoutes(r *gin.Engine) {
 
 		// Create
 		manage.POST("/create/novel", handler.CreateNovel)
-		manage.POST("/create/:novel/chapter", handler.CreateChapter)
+		manage.POST("/create/chapter", handler.CreateChapter)
 
 		// Update
-		manage.PUT("/update/:novel", handler.UpdateNovel)
-		manage.PUT("/update/:novel/:chapter", handler.UpdateChapter)
+		manage.PUT("/update/novel", handler.UpdateNovel)
+		manage.PUT("/update/chapter", handler.UpdateChapter)
 
 		// Delete
-		manage.DELETE("/delete/:novel", handler.DeleteNovel)
-		manage.DELETE("/delete/:novel/:chapter", handler.DeleteChapter)
+		manage.DELETE("/delete/novel", handler.DeleteNovel)
+		manage.DELETE("/delete/chapter", handler.DeleteChapter)
 	}
 
 	user := r.Group("/api/user")
