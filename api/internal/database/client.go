@@ -122,6 +122,8 @@ func (c *Client) EnsureSchema(ctx context.Context) error {
 		return &cmn.Error{Err: errors.New("postgres client not initialized"), Status: http.StatusInternalServerError}
 	}
 
+	// Note: CREATE EXTENSION sometimes requires superuser privileges.
+	// If you can't create it inside a transaction in your environment, run it separately.
 	tx, err := c.Pool.Begin(ctx)
 	if err != nil {
 		return &cmn.Error{Err: fmt.Errorf("begin tx for schema: %w", err), Status: http.StatusInternalServerError}
@@ -133,40 +135,41 @@ func (c *Client) EnsureSchema(ctx context.Context) error {
 		`CREATE EXTENSION IF NOT EXISTS pgcrypto;`,
 
 		`CREATE TABLE IF NOT EXISTS users (
-				id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-				username text NOT NULL,
-				type text NOT NULL,
-				email text NOT NULL,
-				password text NOT NULL,
-				created_at timestamptz NOT NULL DEFAULT now(),
-				updated_at timestamptz NOT NULL DEFAULT now()
-			);`,
+			id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+			username text NOT NULL,
+			type text NOT NULL,
+			email text NOT NULL,
+			password text NOT NULL,
+			created_at timestamptz NOT NULL DEFAULT now(),
+			updated_at timestamptz NOT NULL DEFAULT now()
+		);`,
 
-		// novels with chapter_count for atomic index allocation
 		`CREATE TABLE IF NOT EXISTS novels (
-				id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-				title text NOT NULL,
-				author text NOT NULL,
-				description text NOT NULL,
-				chapter_count bigint NOT NULL DEFAULT 0,
-				created_at timestamptz NOT NULL DEFAULT now(),
-				updated_at timestamptz NOT NULL DEFAULT now()
-			);`,
+			id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+			title text NOT NULL,
+			author text NOT NULL,
+			description text NOT NULL,
+			chapter_count bigint NOT NULL DEFAULT 0,
+			created_at timestamptz NOT NULL DEFAULT now(),
+			updated_at timestamptz NOT NULL DEFAULT now()
+		);`,
 
-		// parent partitioned chapters table (hash partition on novel_id)
+		// IMPORTANT: Primary key must include partition key (novel_id) for partitioned tables.
 		`CREATE TABLE IF NOT EXISTS chapters (
-				id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-				novel_id uuid NOT NULL,
-				title text NOT NULL,
-				author text NOT NULL,
-				description text NOT NULL,
-				content text NOT NULL,
-				chapter_index bigint DEFAULT 0,
-				deleted boolean DEFAULT false,
-				created_at timestamptz NOT NULL DEFAULT now(),
-				updated_at timestamptz NOT NULL DEFAULT now()
-			) PARTITION BY HASH (novel_id);`,
-		// an index that supports seek pagination: novel_id, chapter_index, id
+			id uuid NOT NULL DEFAULT gen_random_uuid(),
+			novel_id uuid NOT NULL,
+			title text NOT NULL,
+			author text NOT NULL,
+			description text NOT NULL,
+			content text NOT NULL,
+			chapter_index bigint DEFAULT 0,
+			deleted boolean DEFAULT false,
+			created_at timestamptz NOT NULL DEFAULT now(),
+			updated_at timestamptz NOT NULL DEFAULT now(),
+			PRIMARY KEY (novel_id, id)
+		) PARTITION BY HASH (novel_id);`,
+
+		// Index for seek/pagination that includes the partition key (novel_id)
 		`CREATE INDEX IF NOT EXISTS idx_chapters_novel_index_id ON chapters (novel_id, chapter_index, id);`,
 
 		`CREATE INDEX IF NOT EXISTS idx_novels_title_id ON novels (title, id);`,
@@ -181,13 +184,23 @@ func (c *Client) EnsureSchema(ctx context.Context) error {
 
 	// Create partitions (idempotent)
 	const partitionsCount = 16
-	for i := range partitionsCount {
+	for i := 0; i < partitionsCount; i++ {
+		partitionName := fmt.Sprintf("chapters_p%d", i)
 		stmt := fmt.Sprintf(
-			`CREATE TABLE IF NOT EXISTS chapters_p%d PARTITION OF chapters FOR VALUES WITH (MODULUS %d, REMAINDER %d);`,
-			i, partitionsCount, i,
+			`CREATE TABLE IF NOT EXISTS %s PARTITION OF chapters
+				FOR VALUES WITH (MODULUS %d, REMAINDER %d);`,
+			partitionName, partitionsCount, i,
 		)
 		if _, err := tx.Exec(ctx, stmt); err != nil {
 			return &cmn.Error{Err: fmt.Errorf("creating partition %d: %w", i, err), Status: http.StatusInternalServerError}
+		}
+
+		idxStmt := fmt.Sprintf(
+			`CREATE UNIQUE INDEX IF NOT EXISTS idx_%s_id ON %s (id);`,
+			partitionName, partitionName,
+		)
+		if _, err := tx.Exec(ctx, idxStmt); err != nil {
+			return &cmn.Error{Err: fmt.Errorf("creating id index for partition %d: %w", i, err), Status: http.StatusInternalServerError}
 		}
 	}
 
