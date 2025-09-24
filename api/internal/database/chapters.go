@@ -57,13 +57,9 @@ ListChaptersSeek returns up to `limit` chapters for a novel using seek-paginatio
 
   - nextCursor: encoded cursor to use for the next page (empty if no more rows)
 */
-func (c *Client) ListChaptersSeek(novelId string, limit int, cursor string, asc bool, ctx context.Context) ([]domain.Chapter, string, error) {
-	if limit <= 0 {
-		limit = 100
-	}
-
+func (c *Client) ListChaptersSeek(options domain.CursorOptions, ctx context.Context) ([]domain.Chapter, string, error) {
 	// decode cursor
-	sc, err := decodeCursor(cursor)
+	sc, err := decodeCursor(options.Cursor)
 	if err != nil {
 		return nil, "", &cmn.Error{Err: fmt.Errorf("invalid cursor: %w", err), Status: http.StatusBadRequest}
 	}
@@ -72,19 +68,19 @@ func (c *Client) ListChaptersSeek(novelId string, limit int, cursor string, asc 
 	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
 		var rows pgx.Rows
 
-		fetchLimit := limit + 1
+		fetchLimit := options.Limit + 1
 
-		if asc {
+		if options.Ascending {
 			if sc.Index == -1 { // First page
-				rows, err = conn.Query(ctx, listChaptersAscFirstSQL, novelId, fetchLimit)
+				rows, err = conn.Query(ctx, listChaptersAscFirstSQL, options.NovelID, fetchLimit)
 			} else {
-				rows, err = conn.Query(ctx, listChaptersAscSQL, novelId, sc.Index, sc.ID, fetchLimit)
+				rows, err = conn.Query(ctx, listChaptersAscSQL, options.NovelID, sc.Index, sc.ID, fetchLimit)
 			}
 		} else {
 			if sc.Index == -1 { // First page
-				rows, err = conn.Query(ctx, listChaptersDescFirstSQL, novelId, fetchLimit)
+				rows, err = conn.Query(ctx, listChaptersDescFirstSQL, options.NovelID, fetchLimit)
 			} else {
-				rows, err = conn.Query(ctx, listChaptersDescSQL, novelId, sc.Index, sc.ID, fetchLimit)
+				rows, err = conn.Query(ctx, listChaptersDescSQL, options.NovelID, sc.Index, sc.ID, fetchLimit)
 			}
 		}
 
@@ -96,7 +92,7 @@ func (c *Client) ListChaptersSeek(novelId string, limit int, cursor string, asc 
 		results, err = pgx.CollectRows(rows, func(row pgx.CollectableRow) (domain.Chapter, error) {
 			var chapter domain.Chapter
 
-			err := row.Scan(&chapter.Title, &chapter.Author, &chapter.Description,
+			err := row.Scan(&chapter.ID, &chapter.Title, &chapter.Author, &chapter.Description,
 				&chapter.Content, &chapter.Index, &chapter.Deleted, &chapter.CreatedAt, &chapter.UpdatedAt)
 			if err != nil {
 				return domain.Chapter{}, &cmn.Error{Err: fmt.Errorf("scan ListChaptersSeek: %w", err), Status: http.StatusInternalServerError}
@@ -114,9 +110,9 @@ func (c *Client) ListChaptersSeek(novelId string, limit int, cursor string, asc 
 	}
 
 	var nextCursor string
-	hasMore := len(results) > limit
+	hasMore := len(results) > options.Limit
 	if hasMore {
-		results = results[:limit]
+		results = results[:options.Limit]
 	}
 
 	if len(results) > 0 && hasMore {
@@ -131,48 +127,11 @@ func (c *Client) ListChaptersSeek(novelId string, limit int, cursor string, asc 
 	return results, nextCursor, nil
 }
 
-func (c *Client) BatchUploadChapters(novelID string, chapters []domain.Chapter, ctx context.Context) error {
-
-	chunkSize := 500
-
-	for i := 0; i < len(chapters); i += chunkSize {
-		end := min(i+chunkSize, len(chapters))
-		chunk := chapters[i:end]
-
-		if err := c.WithTx(ctx, func(tx pgx.Tx) error {
-			b := &pgx.Batch{}
-			insertSQL := `INSERT INTO chapters (novel_id, title, author, description, content, chapter_index, deleted) VALUES ($1,$2,$3,$4,$5,$6,$7)`
-
-			for _, ch := range chunk {
-				b.Queue(insertSQL, novelID, ch.Title, ch.Author, ch.Description, ch.Content, ch.Index, ch.Deleted)
-			}
-
-			br := tx.SendBatch(ctx, b)
-			defer br.Close()
-
-			for range chunk {
-				if _, err := br.Exec(); err != nil {
-					return fmt.Errorf("batch exec: %w", err)
-				}
-			}
-			if _, err := tx.Exec(ctx, `UPDATE novels SET chapter_count = chapter_count + $1 WHERE id = $2`, len(chunk), novelID); err != nil {
-				return fmt.Errorf("update chapter_count: %w", err)
-			}
-
-			return nil
-		}); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
+func (c *Client) CreateChapter(chapter domain.CreateChapter, ctx context.Context) error {
 	var newIndex int64
 
 	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
-		err := c.Pool.QueryRow(ctx, `UPDATE novels SET chapter_count = chapter_count + 1, updated_at = now() WHERE id = $1 RETURNING chapter_count`, novelId).Scan(&newIndex)
+		err := c.Pool.QueryRow(ctx, `UPDATE novels SET chapter_count = chapter_count + 1, updated_at = now() WHERE id = $1 RETURNING chapter_count`, chapter.NovelID).Scan(&newIndex)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return &cmn.Error{Err: fmt.Errorf("novel not found: %w", err), Status: http.StatusNotFound}
@@ -187,7 +146,7 @@ func (c *Client) CreateChapter(novelId string, chapter domain.Chapter, ctx conte
 			`
 
 		if _, err = c.Pool.Exec(ctx, insertSQL,
-			novelId,
+			chapter.NovelID,
 			chapter.Title,
 			chapter.Author,
 			chapter.Description,
@@ -237,7 +196,12 @@ func (c *Client) GetAllChapters(novelId string, pageSize int, asc bool, ctx cont
 	var all []domain.Chapter
 	cursor := ""
 	for {
-		chs, nextCursor, err := c.ListChaptersSeek(novelId, pageSize, cursor, asc, ctx)
+		chs, nextCursor, err := c.ListChaptersSeek(domain.CursorOptions{
+			NovelID:   novelId,
+			Limit:     pageSize,
+			Cursor:    cursor,
+			Ascending: asc,
+		}, ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -264,10 +228,10 @@ func (c *Client) UpdateChapter(novelId string, chapter domain.Chapter, ctx conte
 	return nil
 }
 
-func (c *Client) DeleteChapter(chapterId string, ctx context.Context) error {
+func (c *Client) DeleteChapter(novelId, chapterId string, ctx context.Context) error {
 	if err := c.WithConn(ctx, func(conn *pgxpool.Conn) error {
-		query := "UPDATE chapters SET deleted = $1 WHERE id = $2"
-		_, err := conn.Exec(ctx, query, true, chapterId)
+		query := "UPDATE chapters SET deleted = $1 WHERE novel_id = $2 AND id = $3"
+		_, err := conn.Exec(ctx, query, true, novelId, chapterId)
 		if err != nil {
 			return &cmn.Error{Err: fmt.Errorf("delete chapter: %w", err), Status: http.StatusInternalServerError}
 		}

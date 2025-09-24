@@ -13,8 +13,8 @@ import (
 
 func (c *Client) CreateUser(user domain.User, ctx context.Context) error {
 	return c.WithConn(ctx, func(conn *pgxpool.Conn) error {
-		const insertSQL = `INSERT INTO users (id, email, username, type, password) VALUES ($1,$2,$3,$4,$5)`
-		if _, err := conn.Exec(ctx, insertSQL, user.ID, user.Email, user.Username, user.Type, user.Password); err != nil {
+		const insertSQL = `INSERT INTO users (email, username, type, password) VALUES ($1,$2,$3,$4)`
+		if _, err := conn.Exec(ctx, insertSQL, user.Email, user.Username, user.Type, user.Password); err != nil {
 			return &cmn.Error{Err: fmt.Errorf("insert user: %w", err), Status: http.StatusInternalServerError}
 		}
 		return nil
