@@ -22,3 +22,13 @@ type FrontendNovel struct {
 	CreatedAt   time.Time `json:"creation_date"`
 	UpdatedAt   time.Time `json:"update_date"`
 }
+
+type CreateNovel struct {
+	Title       string `json:"title"`
+	Author      string `json:"author"`
+	Description string `json:"description"`
+}
+
+type ID struct {
+	ID string `json:"id"`
+}

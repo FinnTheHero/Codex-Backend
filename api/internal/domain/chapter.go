@@ -36,3 +36,16 @@ type FrontendChapter struct {
 	UpdatedAt time.Time `json:"update_date"`
 	Content   string    `json:"content"`
 }
+
+type CreateChapter struct {
+	NovelID     string `json:"novel_id"`
+	Title       string `json:"title"`
+	Author      string `json:"author"`
+	Description string `json:"description"`
+	Content     string `json:"content"`
+}
+
+type IDs struct {
+	NovelId   string `json:"novel_id"`
+	ChapterId string `json:"chapter_id"`
+}
