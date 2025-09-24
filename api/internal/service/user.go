@@ -48,13 +48,6 @@ func RegisterUser(newUser domain.NewUser, ctx context.Context) error {
 		return err
 	}
 
-	_, err = client.GetUserByEmail(newUser.Email, ctx)
-	if e, ok := err.(*cmn.Error); ok {
-		if e.StatusCode() != http.StatusNotFound {
-			return &cmn.Error{Err: errors.New("Register Service Error - Getting User By Email: " + err.Error()), Status: http.StatusInternalServerError}
-		}
-	}
-
 	hashedPassword, err := cmn.HashPassword(newUser.Password)
 	if err != nil {
 		return err

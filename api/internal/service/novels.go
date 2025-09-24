@@ -8,7 +8,6 @@ import (
 	"errors"
 	"net/http"
 	"strings"
-	"time"
 
 	htmltomarkdown "github.com/JohannesKaufmann/html-to-markdown/v2"
 	"github.com/PuerkitoBio/goquery"
@@ -48,21 +47,16 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 		return err
 	}
 
-	createdAt, err := time.Parse(time.RFC3339, book.Date)
-	if err != nil {
-		return err
-	}
+	// TODO: Fix in future commits: Add book creation time
+	// createdAt, err := time.Parse(time.RFC3339, book.Date)
+	// if err != nil {
+	// 	return err
+	// }
 
-	novel := domain.Novel{
+	newNovel := domain.Novel{
 		Title:       book.Title,
 		Author:      book.Author,
 		Description: description,
-		CreatedAt:   createdAt,
-	}
-
-	err = CreateNovel(novel, ctx)
-	if err != nil {
-		return err
 	}
 
 	// Create chapters
@@ -87,7 +81,7 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 
 	chapters := make([]domain.Chapter, len(orderedChapters))
 	for i, chapter := range orderedChapters {
-		chap, err := processChap(chapter, book.Author)
+		chap, err := processChap(chapter, i, book.Author)
 		if err != nil {
 			return err
 		}
@@ -100,16 +94,7 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 		return err
 	}
 
-	novel, err = GetNovelByTitle(novel.Title, ctx)
-	if err != nil {
-		return err
-	}
-
-	if novel.ID == "" {
-		return &cmn.Error{Err: errors.New("Novel Service Error - Create Novel From EPUB - Novel Not Created/Found"), Status: http.StatusNotFound}
-	}
-
-	err = client.BatchUploadChapters(novel.ID, chapters, ctx)
+	err = client.CreateNovelFromEpub(newNovel, chapters, ctx)
 	if err != nil {
 		return err
 	}
@@ -117,7 +102,7 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 	return nil
 }
 
-func processChap(chapter pamphlet.Chapter, author string) (*domain.Chapter, error) {
+func processChap(chapter pamphlet.Chapter, index int, author string) (*domain.Chapter, error) {
 	rawContent, err := chapter.GetContent()
 	if err != nil {
 		return nil, err
@@ -141,10 +126,11 @@ func processChap(chapter pamphlet.Chapter, author string) (*domain.Chapter, erro
 		Author:      author,
 		Description: "",
 		Content:     content,
+		Index:       index,
 	}, nil
 }
 
-func CreateNovel(novel domain.Novel, ctx context.Context) error {
+func CreateNovel(novel domain.CreateNovel, ctx context.Context) error {
 	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err
@@ -203,7 +189,7 @@ func GetAllNovels(ctx context.Context) ([]domain.Novel, error) {
 	return novels, nil
 }
 
-func UpdateNovel(id string, novel domain.Novel, ctx context.Context) error {
+func UpdateNovel(novel domain.Novel, ctx context.Context) error {
 	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err

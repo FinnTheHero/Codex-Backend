@@ -9,17 +9,13 @@ import (
 	"net/http"
 )
 
-func GetCursorPaginatedChapters(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
+func GetPaginatedChapters(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
 	client, err := db.GetClient(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if options.Limit > 100 || options.Limit <= 0 {
-		options.Limit = 100
-	}
-
-	chapters, nextCursor, err := client.ListChaptersSeek(options.NovelID, options.Limit, options.Cursor, options.Ascending, ctx)
+	chapters, nextCursor, err := client.ListChaptersSeek(options, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -32,13 +28,13 @@ func GetCursorPaginatedChapters(options domain.CursorOptions, ctx context.Contex
 	return response, nil
 }
 
-func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
+func CreateChapter(chapter domain.CreateChapter, ctx context.Context) error {
 	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err = client.CreateChapter(novelId, chapter, ctx); err != nil {
+	if err = client.CreateChapter(chapter, ctx); err != nil {
 		return err
 	}
 
@@ -96,7 +92,7 @@ func DeleteChapter(novelId, chapterId string, ctx context.Context) error {
 		return err
 	}
 
-	if err = client.DeleteChapter(chapterId, ctx); err != nil {
+	if err = client.DeleteChapter(novelId, chapterId, ctx); err != nil {
 		return err
 	}
 
