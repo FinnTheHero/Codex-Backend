@@ -23,17 +23,15 @@ func GetPaginatedChapters(c *gin.Context) {
 	}
 
 	options := domain.CursorOptions{
-		NovelID: novelId,
-		Cursor:  0,
-		Limit:   100,
-		SortBy:  firestore.Desc,
+		NovelID:   novelId,
+		Cursor:    "",
+		Limit:     100,
+		Ascending: false,
 	}
 
 	if cursor, exists := c.GetQuery("cursor"); exists {
-		curs, err := strconv.Atoi(cursor)
-		if err == nil {
-			options.Cursor = curs
-		}
+		options.Cursor = cursor
+
 	}
 
 	if limit, exists := c.GetQuery("limit"); exists {
@@ -46,11 +44,11 @@ func GetPaginatedChapters(c *gin.Context) {
 	if sortBy, exists := c.GetQuery("sort"); exists {
 		switch sortBy {
 		case "asc":
-			options.SortBy = firestore.Asc
+			options.Ascending = true
 		case "desc":
-			options.SortBy = firestore.Desc
+			options.Ascending = false
 		default:
-			options.SortBy = firestore.Desc
+			options.Ascending = false
 		}
 	}
 

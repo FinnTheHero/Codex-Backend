@@ -19,32 +19,17 @@ func GetCursorPaginatedChapters(options domain.CursorOptions, ctx context.Contex
 		options.Limit = 100
 	}
 
-	response, err := client.CursorPagination(options, ctx)
+	chapters, nextCursor, err := client.ListChaptersSeek(options.NovelID, options.Limit, options.Cursor, options.Ascending, ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	response := &domain.CursorResponse{
+		Chapters:   chapters,
+		NextCursor: nextCursor,
+	}
+
 	return response, nil
-}
-
-func BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.Context) error {
-	client, err := db.GetClient(ctx)
-	if err != nil {
-		return err
-	}
-
-	if len(chapters) == 0 {
-		return &cmn.Error{
-			Err:    errors.New("Nothing to upload"),
-			Status: http.StatusInternalServerError,
-		}
-	}
-
-	if err = client.BatchUploadChapters(novelId, chapters, ctx); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
