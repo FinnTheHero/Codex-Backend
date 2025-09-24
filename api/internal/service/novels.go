@@ -87,7 +87,7 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 
 	chapters := make([]domain.Chapter, len(orderedChapters))
 	for i, chapter := range orderedChapters {
-		chap, err := processChap(chapter, i, book.Author)
+		chap, err := processChap(chapter, book.Author)
 		if err != nil {
 			return err
 		}
@@ -95,7 +95,21 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 		chapters[i] = *chap
 	}
 
-	err = BatchUploadChapters(id, chapters, ctx)
+	client, err := db.GetClient(ctx)
+	if err != nil {
+		return err
+	}
+
+	novel, err = GetNovelByTitle(novel.Title, ctx)
+	if err != nil {
+		return err
+	}
+
+	if novel.ID == "" {
+		return &cmn.Error{Err: errors.New("Novel Service Error - Create Novel From EPUB - Novel Not Created/Found"), Status: http.StatusNotFound}
+	}
+
+	err = client.BatchUploadChapters(novel.ID, chapters, ctx)
 	if err != nil {
 		return err
 	}
@@ -103,7 +117,7 @@ func CreateNovelFromEPUB(data []byte, ctx context.Context) error {
 	return nil
 }
 
-func processChap(chapter pamphlet.Chapter, index int, author string) (*domain.Chapter, error) {
+func processChap(chapter pamphlet.Chapter, author string) (*domain.Chapter, error) {
 	rawContent, err := chapter.GetContent()
 	if err != nil {
 		return nil, err
