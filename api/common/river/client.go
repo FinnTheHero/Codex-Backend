@@ -53,7 +53,7 @@ func InitializeRiverClient(ctx context.Context, workers *river.Workers) *river.C
 
 	// Retry connection with exponential backoff
 	maxRetries := 10
-	for i := 0; i < maxRetries; i++ {
+	for i := range maxRetries {
 		dbPool, err = pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 		if err == nil {
 			// Test the connection
