@@ -2,7 +2,7 @@ package main
 
 import (
 	cmn "Codex-Backend/api/common"
-	db_client "Codex-Backend/api/internal/database/client"
+	db "Codex-Backend/api/internal/database"
 	firestore_server "Codex-Backend/api/internal/server"
 	"context"
 	"fmt"
@@ -17,7 +17,7 @@ func init() {
 	gin.SetMode(mode)
 
 	ctx := context.Background()
-	client, err := db_client.GetClient(ctx)
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("db new client: %v", err))
 	}
