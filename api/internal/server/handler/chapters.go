@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 )
 

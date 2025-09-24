@@ -2,20 +2,18 @@ package domain
 
 import (
 	"time"
-
-	"cloud.google.com/go/firestore"
 )
 
 type CursorOptions struct {
-	NovelID string              `json:"novel_id"`
-	Cursor  int                 `json:"cursor"`
-	Limit   int                 `json:"limit"`
-	SortBy  firestore.Direction `json:"sort_by"`
+	NovelID   string `json:"novel_id"`
+	Cursor    string `json:"cursor"`
+	Limit     int    `json:"limit"`
+	Ascending bool   `json:"sort_by"`
 }
 
 type CursorResponse struct {
-	Chapters   []FrontendChapter `json:"chapters"`
-	NextCursor int               `json:"next_cursor"`
+	Chapters   []Chapter `json:"chapters"`
+	NextCursor string    `json:"next_cursor"`
 }
 
 // Chapter struct used on backend
