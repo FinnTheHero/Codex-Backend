@@ -131,6 +131,43 @@ func (c *Client) ListChaptersSeek(novelId string, limit int, cursor string, asc 
 	return results, nextCursor, nil
 }
 
+func (c *Client) BatchUploadChapters(novelID string, chapters []domain.Chapter, ctx context.Context) error {
+
+	chunkSize := 500
+
+	for i := 0; i < len(chapters); i += chunkSize {
+		end := min(i+chunkSize, len(chapters))
+		chunk := chapters[i:end]
+
+		if err := c.WithTx(ctx, func(tx pgx.Tx) error {
+			b := &pgx.Batch{}
+			insertSQL := `INSERT INTO chapters (novel_id, title, author, description, content, chapter_index, deleted) VALUES ($1,$2,$3,$4,$5,$6,$7)`
+
+			for _, ch := range chunk {
+				b.Queue(insertSQL, novelID, ch.Title, ch.Author, ch.Description, ch.Content, ch.Index, ch.Deleted)
+			}
+
+			br := tx.SendBatch(ctx, b)
+			defer br.Close()
+
+			for range chunk {
+				if _, err := br.Exec(); err != nil {
+					return fmt.Errorf("batch exec: %w", err)
+				}
+			}
+			if _, err := tx.Exec(ctx, `UPDATE novels SET chapter_count = chapter_count + $1 WHERE id = $2`, len(chunk), novelID); err != nil {
+				return fmt.Errorf("update chapter_count: %w", err)
+			}
+
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (c *Client) CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
 	var newIndex int64
 
