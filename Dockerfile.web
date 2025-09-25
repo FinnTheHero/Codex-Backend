@@ -19,8 +19,8 @@ WORKDIR /app
 
 # Copy binary with proper ownership and permissions
 COPY --from=builder --chown=appuser:appgroup /app/web ./web
-
-COPY .env .env
+COPY --chown=appuser:appgroup .env .env
+COPY --chown=appuser:appgroup migrations/ ./migrations/
 
 RUN chmod +x ./web
 
