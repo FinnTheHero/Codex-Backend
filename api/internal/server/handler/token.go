@@ -29,6 +29,6 @@ func ValidateToken(c *gin.Context) {
 		"id":       claims.ID,
 		"email":    claims.Email,
 		"username": claims.Username,
-		"role":     claims.Type,
+		"type":     claims.Type,
 	})
 }
