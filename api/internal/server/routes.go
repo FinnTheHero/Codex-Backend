@@ -96,7 +96,7 @@ func RegisteredRoutes(r *gin.Engine) {
 	{
 		validate.Use(token.SetClaimsFromToken(), token.GlobalToken.UpdateAccessToken(), token.GlobalToken.LoadUser())
 
-		validate.GET("/", handler.ValidateToken)
+		validate.GET("", handler.ValidateToken)
 	}
 
 	// For docker health check
