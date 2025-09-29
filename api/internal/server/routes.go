@@ -56,8 +56,6 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	client := r.Group("/api/")
 	{
-		// client.Use(token.SetClaimsFromToken(), token.GlobalToken.UpdateAccessToken(), token.GlobalToken.LoadUser())
-
 		// Potentially add user public profile view here as well.
 
 		client.GET("/all", handler.FindAllNovels)
