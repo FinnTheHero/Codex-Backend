@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"cloud.google.com/go/firestore"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,17 +23,14 @@ func GetPaginatedChapters(c *gin.Context) {
 	}
 
 	options := domain.CursorOptions{
-		NovelID: novelId,
-		Cursor:  0,
-		Limit:   100,
-		SortBy:  firestore.Desc,
+		NovelID:   novelId,
+		Cursor:    "",
+		Limit:     100,
+		Ascending: false,
 	}
 
 	if cursor, exists := c.GetQuery("cursor"); exists {
-		curs, err := strconv.Atoi(cursor)
-		if err == nil {
-			options.Cursor = curs
-		}
+		options.Cursor = cursor
 	}
 
 	if limit, exists := c.GetQuery("limit"); exists {
@@ -47,15 +43,15 @@ func GetPaginatedChapters(c *gin.Context) {
 	if sortBy, exists := c.GetQuery("sort"); exists {
 		switch sortBy {
 		case "asc":
-			options.SortBy = firestore.Asc
+			options.Ascending = true
 		case "desc":
-			options.SortBy = firestore.Desc
+			options.Ascending = false
 		default:
-			options.SortBy = firestore.Desc
+			options.Ascending = false
 		}
 	}
 
-	response, err := service.GetCursorPaginatedChapters(options, ctx)
+	response, err := service.GetPaginatedChapters(options, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapters: " + e.Error(),
@@ -78,17 +74,33 @@ func FindChapter(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novelId := c.Param("novel")
-	chapterId := c.Param("chapter")
+	IDs := domain.IDs{
+		NovelId:   "",
+		ChapterId: "",
+	}
 
-	if novelId == "" || chapterId == "" {
+	if err := c.ShouldBindJSON(&IDs); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "IDs are not present in request",
+			"error": "Failed to get chapter IDs: " + err.Error(),
 		})
 		return
 	}
 
-	chapter, err := service.GetChapter(novelId, chapterId, ctx)
+	if IDs.NovelId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Novel ID not found",
+		})
+		return
+	}
+
+	if IDs.ChapterId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Chapter ID not found",
+		})
+		return
+	}
+
+	chapter, err := service.GetChapter(IDs.NovelId, IDs.ChapterId, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapter: " + e.Error(),
@@ -119,7 +131,40 @@ func FindAllChapters(c *gin.Context) {
 		return
 	}
 
-	chapters, err := service.GetAllChapters(novelId, ctx)
+	var err error
+
+	pageSize := 100
+	p, exists := c.GetQuery("size")
+	if exists {
+		if pageSize, err = strconv.Atoi(p); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid page size",
+			})
+			return
+		}
+
+		if pageSize <= 0 && pageSize > 200 {
+			pageSize = 200
+		}
+	}
+
+	ascending := false
+	asc, exists := c.GetQuery("ascending")
+	if exists {
+		switch asc {
+		case "true":
+			ascending = true
+		case "false":
+			ascending = false
+		default:
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid ascending value",
+			})
+			return
+		}
+	}
+
+	chapters, err := service.GetAllChapters(novelId, pageSize, ascending, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to retrieve chapters: " + e.Error(),
@@ -141,9 +186,7 @@ func CreateChapter(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novelId := c.Param("novel")
-
-	chapter := domain.Chapter{}
+	chapter := domain.CreateChapter{}
 
 	if err := c.ShouldBindJSON(&chapter); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -152,7 +195,7 @@ func CreateChapter(c *gin.Context) {
 		return
 	}
 
-	err := service.CreateChapter(novelId, chapter, ctx)
+	err := service.CreateChapter(chapter, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to create chapter: " + e.Error(),
@@ -185,7 +228,7 @@ func UpdateChapter(c *gin.Context) {
 		return
 	}
 
-	err := service.UpdateChapter(novelId, &chapter, ctx)
+	err := service.UpdateChapter(novelId, chapter, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to update chapter: " + e.Error(),
@@ -207,10 +250,26 @@ func DeleteChapter(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novelId := c.Param("novel")
-	chapterId := c.Param("chapter")
+	IDs := domain.IDs{
+		NovelId:   "",
+		ChapterId: "",
+	}
 
-	err := service.DeleteChapter(novelId, chapterId, ctx)
+	if err := c.ShouldBindJSON(&IDs); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to get IDs: " + err.Error(),
+		})
+		return
+	}
+
+	if IDs.NovelId == "" || IDs.ChapterId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "No IDs provided",
+		})
+		return
+	}
+
+	err := service.DeleteChapter(IDs.NovelId, IDs.ChapterId, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to delete chapter: " + e.Error(),

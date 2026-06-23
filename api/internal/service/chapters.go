@@ -2,140 +2,84 @@ package service
 
 import (
 	cmn "Codex-Backend/api/common"
-	firestore_client "Codex-Backend/api/internal/database/client"
-	firestore_collections "Codex-Backend/api/internal/database/collections"
+	db "Codex-Backend/api/internal/database"
 	"Codex-Backend/api/internal/domain"
 	"context"
 	"errors"
 	"net/http"
-	"time"
 )
 
-func GetCursorPaginatedChapters(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
-	client, err := firestore_client.FirestoreClient()
+func GetPaginatedChapters(options domain.CursorOptions, ctx context.Context) (*domain.CursorResponse, error) {
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer client.Close()
 
-	c := firestore_collections.Client{Client: client}
-
-	if options.Limit > 100 || options.Limit <= 0 {
-		options.Limit = 100
-	}
-
-	response, err := c.CursorPagination(options, ctx)
+	chapters, nextCursor, err := client.ListChaptersSeek(options, ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	response := &domain.CursorResponse{
+		Chapters:   chapters,
+		NextCursor: nextCursor,
 	}
 
 	return response, nil
 }
 
-func BatchUploadChapters(novelId string, chapters []domain.Chapter, ctx context.Context) error {
-	client, err := firestore_client.FirestoreClient()
+func CreateChapter(chapter domain.CreateChapter, ctx context.Context) error {
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 
-	c := firestore_collections.Client{Client: client}
-
-	if len(chapters) == 0 {
-		return &cmn.Error{
-			Err:    errors.New("Nothing to upload"),
-			Status: http.StatusInternalServerError,
-		}
-	}
-
-	err = c.BatchUploadChapters(novelId, chapters, ctx)
-	if err != nil {
+	if err = client.CreateChapter(chapter, ctx); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func CreateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
-	client, err := firestore_client.FirestoreClient()
+func GetChapter(novelId, chapterId string, ctx context.Context) (domain.Chapter, error) {
+	client, err := db.GetClient(ctx)
 	if err != nil {
-		return err
-	}
-	defer client.Close()
-
-	c := firestore_collections.Client{Client: client}
-
-	id, err := cmn.GenerateID("chapter")
-	if err != nil {
-		return err
+		return domain.Chapter{}, err
 	}
 
-	chapter.ID = id
-	chapter.CreatedAt = time.Now().Format("2006-01-02 15:04:05")
-	chapter.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
-	chapter.Deleted = false
-
-	err = c.CreateChapter(novelId, chapter, ctx)
+	chapter, err := client.GetChapterById(novelId, chapterId, ctx)
 	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func GetChapter(novelId, chapterId string, ctx context.Context) (*domain.Chapter, error) {
-	client, err := firestore_client.FirestoreClient()
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	c := firestore_collections.Client{Client: client}
-
-	chapter, err := c.GetChapterById(novelId, chapterId, ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if chapter == nil {
-		return nil, &cmn.Error{Err: errors.New("Chapter Service Error - Get Chapter - Chapter With ID " + chapterId + " In Novel With ID " + novelId + " Not Found"), Status: http.StatusNotFound}
+		return domain.Chapter{}, err
 	}
 
 	return chapter, nil
 }
 
-func GetAllChapters(novelId string, ctx context.Context) (*[]domain.Chapter, error) {
-	client, err := firestore_client.FirestoreClient()
-	if err != nil {
-		return nil, err
-	}
-	defer client.Close()
-
-	c := firestore_collections.Client{Client: client}
-
-	chapters, err := c.GetAllChapters(novelId, ctx)
+func GetAllChapters(novelId string, pageSize int, asc bool, ctx context.Context) ([]domain.Chapter, error) {
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(*chapters) == 0 {
+	chapters, err := client.GetAllChapters(novelId, pageSize, asc, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(chapters) == 0 {
 		return nil, &cmn.Error{Err: errors.New("Chapter Service Error - Get All Chapters - Chapters In Novel With ID " + novelId + " Not Found"), Status: http.StatusNotFound}
 	}
 
 	return chapters, nil
 }
 
-func UpdateChapter(novelId string, chapter *domain.Chapter, ctx context.Context) error {
-	client, err := firestore_client.FirestoreClient()
+func UpdateChapter(novelId string, chapter domain.Chapter, ctx context.Context) error {
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 
-	c := firestore_collections.Client{Client: client}
-
-	err = c.UpdateChapter(novelId, *chapter, ctx)
-	if err != nil {
+	if err = client.UpdateChapter(novelId, chapter, ctx); err != nil {
 		return err
 	}
 
@@ -143,16 +87,12 @@ func UpdateChapter(novelId string, chapter *domain.Chapter, ctx context.Context)
 }
 
 func DeleteChapter(novelId, chapterId string, ctx context.Context) error {
-	client, err := firestore_client.FirestoreClient()
+	client, err := db.GetClient(ctx)
 	if err != nil {
 		return err
 	}
-	defer client.Close()
 
-	c := firestore_collections.Client{Client: client}
-
-	err = c.DeleteChapter(novelId, chapterId, ctx)
-	if err != nil {
+	if err = client.DeleteChapter(novelId, chapterId, ctx); err != nil {
 		return err
 	}
 

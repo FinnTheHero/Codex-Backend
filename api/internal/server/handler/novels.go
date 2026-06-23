@@ -8,7 +8,6 @@ import (
 	"Codex-Backend/api/internal/service/worker"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,56 +68,47 @@ func FindNovel(c *gin.Context) {
 	defer ctx.Done()
 
 	param := c.Param("novel")
-
-	withId := false
-	withTitle := false
-
-	if strings.HasPrefix(param, "novel_") {
-		withId = true
-	} else {
-		withTitle = true
-	}
-
-	if withId {
-		novel, err := service.GetNovelById(param, ctx)
-		if e, ok := err.(*cmn.Error); ok {
-			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
-				"error": "Failed to retrieve novel: " + e.Error(),
-			})
-			return
-		} else if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to retrieve novel: " + err.Error(),
-			})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"novel": novel,
-		})
-	} else if withTitle {
-		novel, err := service.GetNovelByTitle(param, ctx)
-		if e, ok := err.(*cmn.Error); ok {
-			c.AbortWithStatusJSON(e.StatusCode(), gin.H{
-				"error": "Failed to retrieve novel: " + e.Error(),
-			})
-			return
-		} else if err != nil {
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to retrieve novel: " + err.Error(),
-			})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"novel": novel,
-		})
-	} else {
+	if param == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel Title and ID not found",
+			"error": "Novel ID not found",
 		})
 		return
 	}
+
+	novel, err := service.GetNovelById(param, ctx)
+	if e, ok := err.(*cmn.Error); ok {
+		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+			"error": "Failed to retrieve novel: " + e.Error(),
+		})
+		return
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve novel: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"novel": novel,
+	})
+
+	// novel, err := service.GetNovelByTitle(param, ctx)
+	// if e, ok := err.(*cmn.Error); ok {
+	// 	c.AbortWithStatusJSON(e.StatusCode(), gin.H{
+	// 		"error": "Failed to retrieve novel: " + e.Error(),
+	// 	})
+	// 	return
+	// } else if err != nil {
+	// 	c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+	// 		"error": "Failed to retrieve novel: " + err.Error(),
+	// 	})
+	// 	return
+	// }
+
+	// c.JSON(http.StatusOK, gin.H{
+	// 	"novel": novel,
+	// })
+
 }
 
 func FindAllNovels(c *gin.Context) {
@@ -147,7 +137,7 @@ func CreateNovel(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novel := domain.Novel{}
+	novel := domain.CreateNovel{}
 
 	if err := c.ShouldBindJSON(&novel); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -156,7 +146,7 @@ func CreateNovel(c *gin.Context) {
 		return
 	}
 
-	err, id := service.CreateNovel(novel, ctx)
+	err := service.CreateNovel(novel, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to create novel: " + e.Error(),
@@ -171,21 +161,12 @@ func CreateNovel(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Novel created successfully",
-		"id":      id,
 	})
 }
 
 func UpdateNovel(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
-
-	novelId := c.Param("novel")
-	if novelId == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Novel ID not found",
-		})
-		return
-	}
 
 	novel := domain.Novel{}
 
@@ -196,7 +177,7 @@ func UpdateNovel(c *gin.Context) {
 		return
 	}
 
-	err := service.UpdateNovel(novelId, novel, ctx)
+	err := service.UpdateNovel(novel, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to update novel: " + e.Error(),
@@ -218,15 +199,23 @@ func DeleteNovel(c *gin.Context) {
 	ctx := c.Request.Context()
 	defer ctx.Done()
 
-	novelId := c.Param("novel")
-	if novelId == "" {
+	novelId := domain.ID{}
+
+	if err := c.ShouldBindJSON(&novelId); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"error": "Failed to get novel ID: " + err.Error(),
+		})
+		return
+	}
+
+	if novelId.ID == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"error": "Novel ID not found",
 		})
 		return
 	}
 
-	err := service.DeleteNovel(novelId, ctx)
+	err := service.DeleteNovel(novelId.ID, ctx)
 	if e, ok := err.(*cmn.Error); ok {
 		c.AbortWithStatusJSON(e.StatusCode(), gin.H{
 			"error": "Failed to delete novel: " + e.Error(),

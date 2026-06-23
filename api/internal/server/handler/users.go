@@ -83,7 +83,7 @@ func LoginUser(c *gin.Context) {
 
 	config := token.DefaultTokenConfig()
 
-	tokens, err := token.GenerateTokenPair(user.ID, user.Email, config)
+	tokens, err := token.GenerateTokenPair(user, config)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"error": "Error logging in the user: " + err.Error(),

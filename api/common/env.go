@@ -32,7 +32,20 @@ func GetDomains(v string) []string {
 		log.Fatal(&Error{Err: errors.New("Environmental Variable " + v + " Not Found"), Status: http.StatusNotFound})
 	}
 
+	domains := []string{}
+
 	result := strings.Split(env_variable, ",")
 
-	return result
+	if len(result) == 0 {
+		return []string{"*"}
+	}
+
+	for _, domain := range result {
+		cleaned := strings.TrimSpace(domain)
+		if cleaned != "" {
+			domains = append(domains, cleaned)
+		}
+	}
+
+	return domains
 }

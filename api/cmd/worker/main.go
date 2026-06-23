@@ -9,12 +9,15 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func init() {
-	if mode := os.Getenv("GIN_MODE"); mode == "debug" {
-		cmn.LoadEnvVariables()
-	}
+	cmn.LoadEnvVariables()
+
+	mode := cmn.GetEnvVariable("GIN_MODE")
+	gin.SetMode(mode)
 }
 
 func main() {

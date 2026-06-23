@@ -53,10 +53,11 @@ func RegisteredRoutes(r *gin.Engine) {
 	token.InitIMTokenCache()
 
 	// Add mandatory token check
-	r.Use(token.SetClaimsFromToken(), token.GlobalToken.AutoRefreshTokenMiddleware())
 
 	client := r.Group("/api/")
 	{
+		// Potentially add user public profile view here as well.
+
 		client.GET("/all", handler.FindAllNovels)
 		client.GET("/:novel", handler.FindNovel)
 		client.GET("/:novel/all", handler.FindAllChapters)
@@ -66,28 +67,41 @@ func RegisteredRoutes(r *gin.Engine) {
 
 	manage := r.Group("/api/manage")
 	{
-		manage.Use(token.GlobalToken.LoadUser())
+		manage.Use(token.SetClaimsFromToken(), token.GlobalToken.UpdateAccessToken(), token.GlobalToken.LoadUser())
 
-		// Create
-		manage.POST("/novel", handler.CreateNovel)
-		manage.POST("/:novel/chapter", handler.CreateChapter)
+		// Create Novel/Chapters from epub file.
 		manage.POST("/epub", handler.EPUBNovel)
 
+		// Create
+		manage.POST("/create/novel", handler.CreateNovel)
+		manage.POST("/create/chapter", handler.CreateChapter)
+
 		// Update
-		manage.PUT("/:novel", handler.UpdateNovel)
-		manage.PUT("/:novel/:chapter", handler.UpdateChapter)
+		manage.PUT("/update/novel", handler.UpdateNovel)
+		manage.PUT("/update/chapter", handler.UpdateChapter)
 
 		// Delete
-		manage.DELETE("/:novel", handler.DeleteNovel)
-		manage.DELETE("/:novel/:chapter", handler.DeleteChapter)
+		manage.DELETE("/delete/novel", handler.DeleteNovel)
+		manage.DELETE("/delete/chapter", handler.DeleteChapter)
 	}
 
 	user := r.Group("/api/user")
 	{
-		user.GET("/validate", handler.ValidateToken)
 		user.POST("/login", handler.LoginUser)
 		user.POST("/logout", handler.LogoutUser)
 		user.POST("/register", handler.RegisterUser)
-		user.GET("/refresh", handler.RefreshToken)
+	}
+
+	validate := r.Group("/api/validate")
+	{
+		validate.Use(token.SetClaimsFromToken(), token.GlobalToken.UpdateAccessToken(), token.GlobalToken.LoadUser())
+
+		validate.GET("", handler.ValidateToken)
+	}
+
+	// For docker health check
+	health := r.Group("/health")
+	{
+		health.GET("/", handler.HealthCheck)
 	}
 }

@@ -1,0 +1,12 @@
+.git
+.gitignore
+
+.github
+
+Dockerfile.web
+Dockerfile.worker
+README.md
+
+.air.toml
+
+tmp
